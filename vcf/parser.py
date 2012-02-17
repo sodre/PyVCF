@@ -108,6 +108,14 @@ class _vcf_metadata_parser(object):
         return match.group('key'), match.group('val')
 
 
+class NoCmpList(list):
+
+    def __cmp__(self, other):
+        if type(other) != type(self):
+            raise Exception('Cannot compare vcf attribute lists to type %s' % type(other))
+        return list.__cmp__(self, other)
+
+
 class _Call(object):
     """ A genotype call, a cell entry in a VCF file"""
 
@@ -442,8 +450,8 @@ class Reader(object):
 
     def _map(self, func, iterable, bad='.'):
         '''``map``, but make bad values None.'''
-        return [func(x) if x != bad else None
-                for x in iterable]
+        return NoCmpList([func(x) if x != bad else None
+                for x in iterable])
 
     def _parse_info(self, info_str):
         '''Parse the INFO field of a VCF entry into a dictionary of Python
@@ -537,7 +545,8 @@ class Reader(object):
                     sampdict[fmt] = vals
 
                 if entry_num != 1:
-                    sampdict[fmt] = (sampdict[fmt])
+                    sampdict[fmt] = NoCmpList([sampdict[fmt]])
+
 
                 continue
 
@@ -670,7 +679,7 @@ class Writer(object):
         return ':'.join(self._stringify(sample.data[f]) for f in fmt.split(':'))
 
     def _stringify(self, x, none='.'):
-        if type(x) == type([]):
+        if isinstance(x, list):
             return ','.join(self._map(str, x, none))
         return str(x) if x is not None else none
 

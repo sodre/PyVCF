@@ -5,6 +5,7 @@ import commands
 from StringIO import StringIO
 
 import vcf
+from vcf.parser import NoCmpList
 from vcf import utils
 
 suite = doctest.DocTestSuite(vcf.parser)
@@ -29,7 +30,7 @@ class TestVcfSpecs(unittest.TestCase):
                 assert not r.is_monomorphic
 
             if 'AF' in r.INFO:
-                self.assertEqual(type(r.INFO['AF']),  type([]))
+                self.assertEqual(isinstance(r.INFO['AF'], []))
 
             for c in r:
                 assert c
@@ -38,7 +39,7 @@ class TestVcfSpecs(unittest.TestCase):
                 if c.called:
                     self.assertEqual(type(c.data['GQ']),  type(1))
                     if 'HQ' in c.data and c.data['HQ'] is not None:
-                        self.assertEqual(type(c.data['HQ']),  type([]))
+                        self.assertEqual(type(c.data['HQ']),  type(NoCmpList()))
 
 
 
@@ -426,7 +427,14 @@ class TestUtils(unittest.TestCase):
                 assert recs[0] is not None
                 assert recs[1] is not None
 
+    def test_nocmp_list(self):
 
+        nc = NoCmpList([1,2,3])
+
+        assert nc > [0,1]
+
+        with self.assertRaises(Exception):
+            assert nc > 1
 
 
 
