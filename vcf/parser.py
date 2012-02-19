@@ -373,7 +373,7 @@ class Reader(object):
         if filename:
             self.filename = filename
             if fsock is None:
-                self.reader = file(filename)
+                self.reader = open(filename)
 
         if fsock:
             self.reader = fsock
@@ -413,7 +413,7 @@ class Reader(object):
 
         parser = _vcf_metadata_parser()
 
-        line = self.reader.next()
+        line = next(self.reader)
         while line.startswith('##'):
             self._header_lines.append(line)
             line = line.strip()
@@ -434,7 +434,7 @@ class Reader(object):
                 key, val = parser.read_meta(line.strip())
                 self.metadata[key] = val
 
-            line = self.reader.next()
+            line = next(self.reader)
 
         fields = line.split()
         self.samples = fields[9:]
@@ -509,7 +509,7 @@ class Reader(object):
             samp_fmt_types.append(entry_type)
             samp_fmt_nums.append(entry_num)
 
-        for name, sample in itertools.izip(self.samples, samples):
+        for name, sample in zip(self.samples, samples):
             sampdict = self._parse_sample(sample, samp_fmt, samp_fmt_types, samp_fmt_nums)
             samp_data.append(_Call(site, name, sampdict))
 
@@ -518,7 +518,7 @@ class Reader(object):
     def _parse_sample(self, sample, samp_fmt, samp_fmt_types, samp_fmt_nums):
         sampdict = dict([(x, None) for x in samp_fmt])
 
-        for fmt, entry_type, entry_num, vals in itertools.izip(
+        for fmt, entry_type, entry_num, vals in zip(
                 samp_fmt, samp_fmt_types, samp_fmt_nums, sample.split(':')):
 
             # short circuit the most common
@@ -555,9 +555,9 @@ class Reader(object):
         return sampdict
 
 
-    def next(self):
+    def __next__(self):
         '''Return the next record in the file.'''
-        row = self.reader.next().split()
+        row = next(self.reader).split()
         chrom = row[0]
         if self._prepend_chr:
             chrom = 'chr' + chrom
@@ -616,7 +616,7 @@ class Reader(object):
         if end is None:
             self.reader = self._tabix.fetch(chrom, start, start+1)
             try:
-                return self.next()
+                return next(self)
             except StopIteration:
                 return None
 
@@ -633,13 +633,13 @@ class Writer(object):
         self.writer = csv.writer(stream, delimiter="\t")
         self.template = template
 
-        for line in template.metadata.items():
+        for line in list(template.metadata.items()):
             stream.write('##%s=%s\n' % line)
-        for line in template.infos.values():
+        for line in list(template.infos.values()):
             stream.write('##INFO=<ID=%s,Number=%s,Type=%s,Description="%s">\n' % tuple(self._map(str, line)))
-        for line in template.formats.values():
+        for line in list(template.formats.values()):
             stream.write('##FORMAT=<ID=%s,Number=%s,Type=%s,Description="%s">\n' % tuple(self._map(str, line)))
-        for line in template.filters.values():
+        for line in list(template.filters.values()):
             stream.write('##FILTER=<ID=%s,Description="%s">\n' % tuple(self._map(str, line)))
 
         self._write_header()
@@ -662,7 +662,7 @@ class Writer(object):
         return ','.join([x or '.' for x in alt])
 
     def _format_info(self, info):
-        return ';'.join(["%s=%s" % (x, self._stringify(y)) for x, y in info.items()])
+        return ';'.join(["%s=%s" % (x, self._stringify(y)) for x, y in list(info.items())])
 
     def _format_sample(self, fmt, sample):
         if sample.data["GT"] is None:

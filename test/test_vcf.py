@@ -1,8 +1,10 @@
+from __future__ import print_function
+
 import unittest
 import doctest
 import os
-import commands
-from StringIO import StringIO
+import subprocess
+from io import StringIO
 
 import vcf
 from vcf import utils
@@ -11,7 +13,7 @@ suite = doctest.DocTestSuite(vcf.parser)
 
 
 def fh(fname):
-    return file(os.path.join(os.path.dirname(__file__), fname))
+    return open(os.path.join(os.path.dirname(__file__), fname))
 
 
 class TestVcfSpecs(unittest.TestCase):
@@ -65,9 +67,9 @@ class TestVcfSpecs(unittest.TestCase):
 
         # test we can walk the file at least
         for r in reader:
-            print r
+            print(r)
             for c in r:
-                print c
+                print(c)
                 assert c
 
         # asserting False while I work out what to check
@@ -136,7 +138,7 @@ class TestFreebayesOutput(TestGatkOutput):
 
 
 
-        print reader.samples
+        print(reader.samples)
         self.assertEqual(len(reader.samples), 7)
         n = 0
         for r in reader:
@@ -174,7 +176,7 @@ class TestWriter(unittest.TestCase):
 
         records = list(reader)
 
-        map(writer.write_record, records)
+        list(map(writer.write_record, records))
         out.seek(0)
         reader2 = vcf.Reader(out)
 
@@ -275,7 +277,7 @@ class TestCall(unittest.TestCase):
         reader = vcf.Reader(fh('example-4.0.vcf'))
         for var in reader:
             for s in var:
-                print s.data
+                print(s.data)
             gt_types = [s.gt_type for s in var.samples]
             if var.POS == 14370:
                 self.assertEqual([0,1,2], gt_types)
@@ -343,21 +345,21 @@ class TestFilter(unittest.TestCase):
 
 
     def testApplyFilter(self):
-        s, out = commands.getstatusoutput('python scripts/vcf_filter.py --site-quality 30 test/example-4.0.vcf sq')
+        s, out = subprocess.getstatusoutput('python scripts/vcf_filter.py --site-quality 30 test/example-4.0.vcf sq')
         #print out
         assert s == 0
         buf = StringIO()
         buf.write(out)
         buf.seek(0)
 
-        print buf.getvalue()
+        print(buf.getvalue())
         reader = vcf.Reader(buf)
 
 
         # check filter got into output file
         assert 'sq30' in reader.filters
 
-        print reader.filters
+        print(reader.filters)
 
         # check sites were filtered
         n = 0
@@ -371,7 +373,7 @@ class TestFilter(unittest.TestCase):
 
 
     def testApplyMultipleFilters(self):
-        s, out = commands.getstatusoutput('python scripts/vcf_filter.py --site-quality 30 '
+        s, out = subprocess.getstatusoutput('python scripts/vcf_filter.py --site-quality 30 '
         '--genotype-quality 50 test/example-4.0.vcf sq mgq')
         assert s == 0
         #print out
@@ -380,7 +382,7 @@ class TestFilter(unittest.TestCase):
         buf.seek(0)
         reader = vcf.Reader(buf)
 
-        print reader.filters
+        print(reader.filters)
 
         assert 'mgq50' in reader.filters
         assert 'sq30' in reader.filters
@@ -389,7 +391,7 @@ class TestRegression(unittest.TestCase):
 
     def test_issue_16(self):
         reader = vcf.Reader(fh('issue-16.vcf'))
-        assert reader.next().QUAL == None
+        assert next(reader).QUAL == None
 
 
 

@@ -6,7 +6,7 @@ def walk_together(*readers):
         inputs are sorted in the same way and use the same reference
         otherwise behaviour is undefined.
     """
-    nexts = [reader.next() for reader in readers]
+    nexts = [next(reader) for reader in readers]
 
     while True:
         min_next = min([x for x in nexts if x is not None])
@@ -21,7 +21,7 @@ def walk_together(*readers):
             
             if n is not None and n == min_next:
                 try:
-                    nexts[i] = readers[i].next()
+                    nexts[i] = next(readers[i])
                 except StopIteration:
                     nexts[i] = None
 
