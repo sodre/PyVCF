@@ -1,4 +1,3 @@
-
 import collections
 import re
 import csv
@@ -42,6 +41,79 @@ RESERVED_FORMAT = {
     'CN':'Integer','CNQ':'Float','CNL':'Float','NQ':'Integer','HAP':'Integer',
     'AHAP':'Integer'
 }
+
+cdef _map(func, iterable, bad='.'):
+    '''``map``, but make bad values None.'''
+    return [func(x) if x != bad else None
+            for x in iterable]
+
+
+cdef char *INTEGER = 'Integer'
+cdef char *FLOAT = 'Float'
+cdef char *NUMERIC = 'Numeric'
+
+cdef _parse_samples(
+        list names, list samples, list samp_fmt,
+        list samp_fmt_types, list samp_fmt_nums, site):
+
+    cdef char *name, *fmt, *entry_type, *sample
+    cdef int i, j
+    cdef list samp_data = []
+    cdef dict sampdict
+    cdef list sampvals
+    n_samples = len(samples)
+    n_formats = len(samp_fmt)
+
+    for i in range(n_samples):
+        name = names[i]
+        sample = samples[i]
+
+        # parse the data for this sample
+        sampdict = dict([(x, None) for x in samp_fmt])
+
+        sampvals = sample.split(':')
+
+        for j in range(n_formats):
+            fmt = samp_fmt[j]
+            vals = sampvals[j]
+            entry_type = samp_fmt_types[j]
+            # TODO: entry_num is None for unbounded lists
+            entry_num = samp_fmt_nums[j]
+
+            # short circuit the most common
+            if vals == '.' or vals == './.':
+                sampdict[fmt] = None
+                continue
+
+            # we don't need to split single entries
+            if entry_num == 1 or ',' not in vals:
+
+                if entry_type == INTEGER:
+                    sampdict[fmt] = int(vals)
+                elif entry_type == FLOAT or entry_type == NUMERIC:
+                    sampdict[fmt] = float(vals)
+                else:
+                    sampdict[fmt] = vals
+
+                if entry_num != 1:
+                    sampdict[fmt] = (sampdict[fmt])
+
+                continue
+
+            vals = vals.split(',')
+
+            if entry_type == INTEGER:
+                sampdict[fmt] = _map(int, vals)
+            elif entry_type == FLOAT or entry_type == NUMERIC:
+                sampdict[fmt] = _map(float, vals)
+            else:
+                sampdict[fmt] = vals
+
+        # create a call object
+        call = _Call(site, name, sampdict)
+        samp_data.append(call)
+
+    return samp_data
 
 
 _Info = collections.namedtuple('Info', ['id', 'num', 'type', 'desc'])
@@ -675,11 +747,6 @@ class Reader(object):
         self.samples = fields[9:]
         self._sample_indexes = dict([(x,i) for (i,x) in enumerate(self.samples)])
 
-    def _map(self, func, iterable, bad='.'):
-        '''``map``, but make bad values None.'''
-        return [func(x) if x != bad else None
-                for x in iterable]
-
     def _parse_info(self, info_str):
         '''Parse the INFO field of a VCF entry into a dictionary of Python
         types.
@@ -707,10 +774,10 @@ class Reader(object):
 
             if entry_type == 'Integer':
                 vals = entry[1].split(',')
-                val = self._map(int, vals)
+                val = _map(int, vals)
             elif entry_type == 'Float':
                 vals = entry[1].split(',')
-                val = self._map(float, vals)
+                val = _map(float, vals)
             elif entry_type == 'Flag':
                 val = True
             elif entry_type == 'String':
@@ -760,51 +827,8 @@ class Reader(object):
             self._format_cache[samp_fmt] = (sf, samp_fmt_types, samp_fmt_nums)
             samp_fmt = sf
 
-        samp_data = []
-        _map = self._map
-
-        for name, sample in itertools.izip(self.samples, samples):
-
-            # parse the data for this sample
-            sampdict = dict([(x, None) for x in samp_fmt])
-
-            for fmt, entry_type, entry_num, vals in itertools.izip(
-                    samp_fmt, samp_fmt_types, samp_fmt_nums, sample.split(':')):
-
-                # short circuit the most common
-                if vals == '.' or vals == './.':
-                    sampdict[fmt] = None
-                    continue
-
-                # we don't need to split single entries
-                if entry_num == 1 or ',' not in vals:
-
-                    if entry_type == 'Integer':
-                        sampdict[fmt] = int(vals)
-                    elif entry_type == 'Float':
-                        sampdict[fmt] = float(vals)
-                    else:
-                        sampdict[fmt] = vals
-
-                    if entry_num != 1:
-                        sampdict[fmt] = (sampdict[fmt])
-
-                    continue
-
-                vals = vals.split(',')
-
-                if entry_type == 'Integer':
-                    sampdict[fmt] = _map(int, vals)
-                elif entry_type == 'Float' or entry_type == 'Numeric':
-                    sampdict[fmt] = _map(float, vals)
-                else:
-                    sampdict[fmt] = vals
-
-            # create a call object
-            call = _Call(site, name, sampdict)
-            samp_data.append(call)
-
-        return samp_data
+        return _parse_samples(
+                self.samples, samples, samp_fmt, samp_fmt_types, samp_fmt_nums, site)
 
     def parseALT(self, str):
         if re.search('[\[\]]', str) is not None:
@@ -856,7 +880,7 @@ class Reader(object):
             ID = None
 
         ref = row[3]
-        alt = self._map(self.parseALT, row[4].split(','))
+        alt = _map(self.parseALT, row[4].split(','))
 
         try:
             qual = int(row[5])

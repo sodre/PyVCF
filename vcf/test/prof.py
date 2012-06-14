@@ -1,4 +1,7 @@
-import vcf
+
+# import vcf.cparser as vcf
+import cyvcf.parser as vcf
+#import vcf
 import cProfile
 import timeit
 import pstats
@@ -18,7 +21,7 @@ if sys.argv[1] == 'profile':
 
 elif sys.argv[1] == 'time':
     n = 5
-    t = timeit.timeit('parse_1kg()',  "from __main__ import parse_1kg", number=n)
+    t = timeit.timeit('parse_1kg()',  "from __main__ import parse_1kg", number=1)
     print t/n
 else:
     print 'prof.py profile/time'
