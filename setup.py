@@ -1,4 +1,7 @@
 from setuptools import setup
+from distutils.core import setup
+from distutils.extension import Extension
+from Cython.Distutils import build_ext
 
 requires = []
 
@@ -62,5 +65,7 @@ setup(
     include_package_data=True,
     package_data = {
         '': ['*.vcf', '*.gz', '*.tbi'],
-        }
+        },
+    cmdclass = {'build_ext': build_ext},
+    ext_modules = [Extension("vcf.cparser", ["vcf/cparser.pyx"])]
 )

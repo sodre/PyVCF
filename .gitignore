@@ -5,3 +5,5 @@ dist
 docs/_build
 .ropeproject
 1kg.prof
+vcf/cparser.c
+vcf/cparser.so
