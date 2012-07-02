@@ -6,14 +6,17 @@ from vcf import Reader, Writer
 #from parser import Reader, Writer
 
 class SampleFilter(object):
-    def __init__(self, infile, outfile, filters=None, **kwarg):
+    def __init__(self, infile, outfile=None, filters=None, invert=False):
         self.parser = Reader(filename=infile)
         self.samples = self.parser.samples
         self.smp_idx = dict([(v,k) for k,v in enumerate(self.samples)])
         self.outfile = outfile
+        self.invert = invert
+        self.filters = filters
         if filters is not None:
-            self.set_filters(filters, **kwarg)
-            self.write()
+            self.set_filters()
+            if outfile is not None:
+                self.write()
         else:
             print "Samples:"
             for idx, val in enumerate(self.list_samples()):
@@ -22,8 +25,12 @@ class SampleFilter(object):
     def list_samples(self):
         return self.samples
 
-    def set_filters(self, filters, invert=False, **kwarg):
-        filt_l = filters.split(",")
+    def set_filters(self, filters=None, invert=False):
+        if filters is not None:
+            self.filters = filters
+        if invert:
+            self.invert = invert
+        filt_l = self.filters.split(",")
         filt_s = set(filt_l)
         if len(filt_s) < len(filt_l):
             warnings.warn("Non-unique filters, ignoring", RuntimeWarning)
@@ -43,12 +50,15 @@ class SampleFilter(object):
             # TODO print the filters that were ignored
             warnings.warn("Invalid filters, ignoring", RuntimeWarning)
 
-        if invert:
+        if self.invert:
             filters = set(xrange(len(self.samples))).difference(filters)
 
         self.parser.set_sample_filter(filters)
 
-    def write(self):
+    def write(self, outfile=None):
+        if outfile is not None:
+            self.outfile = outfile
+        print "outfile:", self.outfile
         #writer = Writer(stream=self.outfile, template=self.parser)
         test_row = self.parser.next()
         print test_row.samples
@@ -63,3 +73,7 @@ if __name__ == "__main__":
     filt = SampleFilter(*sys.argv[1:])
     print "now invert:"
     filt2 = SampleFilter(*sys.argv[1:], invert=True)
+    print "now sequential:"
+    filt3 = SampleFilter(sys.argv[1])
+    filt3.set_filters(sys.argv[3])
+    filt3.write(sys.argv[2])
