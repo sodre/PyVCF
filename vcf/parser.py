@@ -172,7 +172,7 @@ class _vcf_metadata_parser(object):
 class Reader(object):
     """ Reader for a VCF v 4.0 file, an iterator returning ``_Record objects`` """
 
-    def __init__(self, fsock=None, filename=None, compressed=False, prepend_chr=False, samp_filter=None):
+    def __init__(self, fsock=None, filename=None, compressed=False, prepend_chr=False):
         """ Create a new Reader for a VCF file.
 
             You must specify either fsock (stream) or filename.  Gzipped streams
@@ -210,12 +210,12 @@ class Reader(object):
         self.formats = None
         self.samples = None
         self._sample_indexes = None
+        self._samp_filter = None
         self._header_lines = []
         self._tabix = None
         self._prepend_chr = prepend_chr
         self._parse_metainfo()
         self._format_cache = {}
-        self.set_sample_filter(samp_filter)
 
     def __iter__(self):
         return self
@@ -320,32 +320,13 @@ class Reader(object):
 
         return retdict
 
-    def set_sample_filter(self, samp_filter):
-        self._samp_filter = None
-        if samp_filter is None:
-            return None
-        if isinstance(samp_filter, basestring):
-            samp_filter = samp_filter.split(",")
-        # if filters aren't ints, try to convert to sample indices
-        try:
-            samp_filter = [int(x) for x in samp_filter]
-        except ValueError:
-            try:
-                samp_filter = [self._sample_indexes[samp] for samp in samp_filter]
-            except KeyError:
-                # TODO raise RuntimeWarning about sample not found
-                pass
+    def _set_sample_filter(self, samp_filter):
         self._samp_filter = samp_filter
 
     def _filter_samples(self, samples):
-        if self._samp_filter is None:
-            return samples
         filt = self._samp_filter
         self.samples = [val for idx,val in enumerate(self.samples) if idx not in filt]
         samples = [val for idx,val in enumerate(samples) if idx not in filt]
-        # FIXME this loop doesn't alter the originals
-        #for samplist in (self.samples, samples):
-            #samplist = [val for idx,val in enumerate(samplist) if idx not in filt]
         return samples
 
     def _parse_sample_format(self, samp_fmt):
@@ -377,11 +358,11 @@ class Reader(object):
         # check whether we already know how to parse this format
         if samp_fmt not in self._format_cache:
             self._format_cache[samp_fmt] = self._parse_sample_format(samp_fmt)
-
         samp_fmt = self._format_cache[samp_fmt]
 
         # filter samples
-        samples = self._filter_samples(samples)
+        if self._samp_filter is not None:
+            samples = self._filter_samples(samples)
 
         if cparse:
             return cparse.parse_samples(
