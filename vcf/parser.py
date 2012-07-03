@@ -324,10 +324,10 @@ class Reader(object):
         self._samp_filter = samp_filter
 
     def _filter_samples(self, samples):
-        filt = self._samp_filter
-        self.samples = [val for idx,val in enumerate(self.samples) if idx not in filt]
-        samples = [val for idx,val in enumerate(samples) if idx not in filt]
-        return samples
+        filt = set(self._samp_filter)
+        self.samples = [val for idx,val in enumerate(self.samples)
+                        if idx not in filt]
+        return [val for idx,val in enumerate(samples) if idx not in filt]
 
     def _parse_sample_format(self, samp_fmt):
         """ Parse the format of the calls in this _Record """

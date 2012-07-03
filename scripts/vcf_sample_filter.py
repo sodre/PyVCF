@@ -58,10 +58,9 @@ class SampleFilter(object):
     def write(self, outfile=None):
         if outfile is not None:
             self.outfile = outfile
-        print "outfile:", self.outfile
-        #writer = Writer(stream=self.outfile, template=self.parser)
-        test_row = self.parser.next()
-        print test_row.samples
+        writer = Writer(open(self.outfile, "w"), self.parser)
+        for row in self.parser:
+            writer.write_record(row)
 
 if __name__ == "__main__":
     # TODO implement argparse
@@ -71,9 +70,10 @@ if __name__ == "__main__":
             raise SystemExit
 
     filt = SampleFilter(*sys.argv[1:])
-    print "now invert:"
-    filt2 = SampleFilter(*sys.argv[1:], invert=True)
-    print "now sequential:"
-    filt3 = SampleFilter(sys.argv[1])
-    filt3.set_filters(sys.argv[3])
-    filt3.write(sys.argv[2])
+    #print "now invert:"
+    #filt2 = SampleFilter(*sys.argv[1:], invert=True)
+    #print "now sequential:"
+    #filt3 = SampleFilter(sys.argv[1])
+    #if len(sys.argv) > 3:
+        #filt3.set_filters(sys.argv[3])
+        #filt3.write(sys.argv[2])
