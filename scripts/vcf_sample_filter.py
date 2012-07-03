@@ -53,7 +53,9 @@ class SampleFilter(object):
         if self.invert:
             filters = set(xrange(len(self.samples))).difference(filters)
 
-        self.parser._set_sample_filter(filters)
+        # sample_filter is a property that updates parser.samples
+        self.parser.sample_filter = filters
+        print "Keeping these samples:", self.parser.samples
 
     def write(self, outfile=None):
         if outfile is not None:

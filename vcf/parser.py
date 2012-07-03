@@ -211,7 +211,7 @@ class Reader(object):
         self.formats = None
         self.samples = None
         self._sample_indexes = None
-        self._samp_filter = None
+        self.sample_filter = None
         self._header_lines = []
         self._tabix = None
         self._prepend_chr = prepend_chr
@@ -321,13 +321,22 @@ class Reader(object):
 
         return retdict
 
-    def _set_sample_filter(self, samp_filter):
+    @property
+    def sample_filter(self):
+        return self._samp_filter
+
+    @sample_filter.setter
+    def sample_filter(self, samp_filter):
         self._samp_filter = samp_filter
+        # not None or empty list
+        if samp_filter:
+            self.samples = [val for idx,val in enumerate(self.samples)
+                            if idx not in set(samp_filter)]
+            # XXX could update self._sample indexes or use it as history
+
 
     def _filter_samples(self, samples):
         filt = set(self._samp_filter)
-        self.samples = [val for idx,val in enumerate(self.samples)
-                        if idx not in filt]
         return [val for idx,val in enumerate(samples) if idx not in filt]
 
     def _parse_sample_format(self, samp_fmt):
