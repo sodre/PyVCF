@@ -1,10 +1,11 @@
+import codecs
 import collections
-import re
 import csv
 import gzip
-import sys
 import itertools
-import codecs
+import os
+import re
+import sys
 
 try:
     from collections import OrderedDict
@@ -522,15 +523,15 @@ class Reader(object):
 
 
 class Writer(object):
-    """ VCF Writer """
+    """VCF Writer. On Windows Python 2, open stream with 'wb'."""
 
     fixed_fields = "#CHROM POS ID REF ALT QUAL FILTER INFO FORMAT".split()
 
     # Reverse keys and values in header field count dictionary
     counts = dict((v,k) for k,v in field_counts.iteritems())
 
-    def __init__(self, stream, template, lineterminator="\r\n"):
-        self.writer = csv.writer(stream, delimiter="\t", lineterminator=lineterminator)
+    def __init__(self, stream, template, eol=os.linesep):
+        self.writer = csv.writer(stream, delimiter="\t", lineterminator=eol)
         self.template = template
         self.stream = stream
 
