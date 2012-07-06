@@ -211,7 +211,6 @@ class Reader(object):
         self.formats = None
         self.samples = None
         self._sample_indexes = None
-        self.sample_filter = None
         self._header_lines = []
         self._tabix = None
         self._prepend_chr = prepend_chr
@@ -321,24 +320,6 @@ class Reader(object):
 
         return retdict
 
-    @property
-    def sample_filter(self):
-        return self._samp_filter
-
-    @sample_filter.setter
-    def sample_filter(self, samp_filter):
-        self._samp_filter = samp_filter
-        # not None or empty list
-        if samp_filter:
-            self.samples = [val for idx,val in enumerate(self.samples)
-                            if idx not in set(samp_filter)]
-            # XXX could update self._sample indexes or use it as history
-
-
-    def _filter_samples(self, samples):
-        filt = set(self._samp_filter)
-        return [val for idx,val in enumerate(samples) if idx not in filt]
-
     def _parse_sample_format(self, samp_fmt):
         """ Parse the format of the calls in this _Record """
         samp_fmt = make_calldata_tuple(samp_fmt.split(':'))
@@ -369,10 +350,6 @@ class Reader(object):
         if samp_fmt not in self._format_cache:
             self._format_cache[samp_fmt] = self._parse_sample_format(samp_fmt)
         samp_fmt = self._format_cache[samp_fmt]
-
-        # filter samples
-        if self._samp_filter is not None:
-            samples = self._filter_samples(samples)
 
         if cparse:
             return cparse.parse_samples(

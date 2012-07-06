@@ -7,9 +7,33 @@ from vcf import Reader, Writer
 
 class SampleFilter(object):
     def __init__(self, infile, outfile=None, filters=None, invert=False):
+        # Methods to add to Reader
+        def get_filter(self):
+            return self._samp_filter
+
+        def set_filter(self, filt):
+            self._samp_filter = filt
+            if filt:
+                self.samples = [val for idx,val in enumerate(self.samples)
+                               if idx not in set(filt)]
+
+        def filter_samples(fn):
+            """Decorator function to filter sample parameter"""
+            def filt(self, samples, *args):
+                samples = [val for idx,val in enumerate(samples)
+                           if idx not in set(self.sample_filter)]
+                return fn(self, samples, *args)
+            return filt
+
+        # Add property to Reader for filter list
+        Reader.sample_filter = property(get_filter, set_filter)
+        # Modify Reader._parse_samples to filter samples
+        Reader._parse_samples = filter_samples(Reader._parse_samples)
         self.parser = Reader(filename=infile)
+        # Store initial samples and indices
         self.samples = self.parser.samples
         self.smp_idx = dict([(v,k) for k,v in enumerate(self.samples)])
+        # Properties for filter/writer
         self.outfile = outfile
         self.invert = invert
         self.filters = filters
@@ -19,11 +43,8 @@ class SampleFilter(object):
                 self.write()
         else:
             print "Samples:"
-            for idx, val in enumerate(self.list_samples()):
+            for idx, val in enumerate(self.samples):
                 print "{0}: {1}".format(idx, val)
-
-    def list_samples(self):
-        return self.samples
 
     def set_filters(self, filters=None, invert=False):
         if filters is not None:
@@ -53,7 +74,7 @@ class SampleFilter(object):
         if self.invert:
             filters = set(xrange(len(self.samples))).difference(filters)
 
-        # sample_filter is a property that updates parser.samples
+        # `sample_filter` setter updates `samples`
         self.parser.sample_filter = filters
         print "Keeping these samples:", self.parser.samples
 
