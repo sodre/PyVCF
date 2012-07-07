@@ -4,7 +4,7 @@ import sys
 import warnings
 
 from vcf import Reader, Writer
-#from parser import Reader, Writer
+
 
 class SampleFilter(object):
     def __init__(self, infile, outfile=None, filters=None, invert=False):
@@ -15,13 +15,13 @@ class SampleFilter(object):
         def set_filter(self, filt):
             self._samp_filter = filt
             if filt:
-                self.samples = [val for idx,val in enumerate(self.samples)
+                self.samples = [val for idx, val in enumerate(self.samples)
                                if idx not in set(filt)]
 
         def filter_samples(fn):
             """Decorator function to filter sample parameter"""
             def filt(self, samples, *args):
-                samples = [val for idx,val in enumerate(samples)
+                samples = [val for idx, val in enumerate(samples)
                            if idx not in set(self.sample_filter)]
                 return fn(self, samples, *args)
             return filt
@@ -33,15 +33,14 @@ class SampleFilter(object):
         self.parser = Reader(filename=infile)
         # Store initial samples and indices
         self.samples = self.parser.samples
-        self.smp_idx = dict([(v,k) for k,v in enumerate(self.samples)])
+        self.smp_idx = dict([(v, k) for k, v in enumerate(self.samples)])
         # Properties for filter/writer
         self.outfile = outfile
         self.invert = invert
         self.filters = filters
         if filters is not None:
             self.set_filters()
-            if outfile is not None:
-                self.write()
+            self.write()
         else:
             print "Samples:"
             for idx, val in enumerate(self.samples):
@@ -57,6 +56,7 @@ class SampleFilter(object):
         filt_s = set(filt_l)
         if len(filt_s) < len(filt_l):
             warnings.warn("Non-unique filters, ignoring", RuntimeWarning)
+
         def filt2idx(item):
             """Convert filter to valid sample index"""
             try:
@@ -83,6 +83,8 @@ class SampleFilter(object):
     def write(self, outfile=None):
         if outfile is not None:
             self.outfile = outfile
+        if self.outfile is None:
+            raise IOError("write() called with no outfile")
         writer = Writer(open(self.outfile, "w"), self.parser)
         print "Writing to '{0}'".format(self.outfile)
         for row in self.parser:
@@ -92,11 +94,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("file", type=str,
                        help="VCF file to filter")
-    parser.add_argument("-f", "--filter", type=str,
-                       help="Comma-separated list of sample indices or names to filter")
+    parser.add_argument("-f", metavar="filters", type=str,
+                       help="Comma-separated list of sample indices or names \
+                        to filter")
     parser.add_argument("--invert", action="store_true",
                        help="Keep rather than discard the filtered samples")
-    parser.add_argument("-o", "--outfile", type=str,
+    parser.add_argument("-o", metavar="outfile", type=str,
                        help="File to write out filtered samples")
     # TODO implement quiet (silent if both outfile and filter are specified)
     parser.add_argument("-q", "--quiet", action="store_true",
