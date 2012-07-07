@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import argparse
 import sys
 import warnings
 
@@ -47,6 +48,7 @@ class SampleFilter(object):
                 print "{0}: {1}".format(idx, val)
 
     def set_filters(self, filters=None, invert=False):
+        """Convert filters from string to list of indices, set on Reader"""
         if filters is not None:
             self.filters = filters
         if invert:
@@ -82,21 +84,24 @@ class SampleFilter(object):
         if outfile is not None:
             self.outfile = outfile
         writer = Writer(open(self.outfile, "w"), self.parser)
+        print "Writing to '{0}'".format(self.outfile)
         for row in self.parser:
             writer.write_record(row)
 
 if __name__ == "__main__":
-    # TODO implement argparse
-    if len(sys.argv) < 4:
-        print "Usage: script.py infile outfile [filt1,filt2]"
-        if len(sys.argv) < 3:
-            raise SystemExit
+    parser = argparse.ArgumentParser()
+    parser.add_argument("file", type=str,
+                       help="VCF file to filter")
+    parser.add_argument("-f", "--filter", type=str,
+                       help="Comma-separated list of sample indices or names to filter")
+    parser.add_argument("--invert", action="store_true",
+                       help="Keep rather than discard the filtered samples")
+    parser.add_argument("-o", "--outfile", type=str,
+                       help="File to write out filtered samples")
+    # TODO implement quiet (silent if both outfile and filter are specified)
+    parser.add_argument("-q", "--quiet", action="store_true",
+                       help="Less output")
 
-    filt = SampleFilter(*sys.argv[1:])
-    #print "now invert:"
-    #filt2 = SampleFilter(*sys.argv[1:], invert=True)
-    #print "now sequential:"
-    #filt3 = SampleFilter(sys.argv[1])
-    #if len(sys.argv) > 3:
-        #filt3.set_filters(sys.argv[3])
-        #filt3.write(sys.argv[2])
+    args = parser.parse_args()
+
+    SampleFilter(args.file, args.outfile, args.filter, args.invert)
