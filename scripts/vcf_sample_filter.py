@@ -78,28 +78,29 @@ class SampleFilter(object):
 
         # `sample_filter` setter updates `samples`
         self.parser.sample_filter = filters
-        print "Keeping these samples:", self.parser.samples
+        sys.stderr.write("Keeping these samples: {0}\n".format(self.parser.samples))
 
     def write(self, outfile=None):
         if outfile is not None:
             self.outfile = outfile
         if self.outfile is None:
-            raise IOError("write() called with no outfile")
-        writer = Writer(open(self.outfile, "w"), self.parser)
-        print "Writing to '{0}'".format(self.outfile)
+            _out = sys.stdout
+        else:
+            _out = open(self.outfile, "wb")
+        writer = Writer(_out, self.parser)
+        sys.stderr.write("Writing to '{0}'\n".format(self.outfile))
         for row in self.parser:
             writer.write_record(row)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("file", type=str,
-                       help="VCF file to filter")
-    parser.add_argument("-f", metavar="filters", type=str,
+    parser.add_argument("file", help="VCF file to filter")
+    parser.add_argument("-f", metavar="filters",
                        help="Comma-separated list of sample indices or names \
                         to filter")
     parser.add_argument("--invert", action="store_true",
                        help="Keep rather than discard the filtered samples")
-    parser.add_argument("-o", metavar="outfile", type=str,
+    parser.add_argument("-o", metavar="outfile",
                        help="File to write out filtered samples")
     # TODO implement quiet (silent if both outfile and filter are specified)
     parser.add_argument("-q", "--quiet", action="store_true",
