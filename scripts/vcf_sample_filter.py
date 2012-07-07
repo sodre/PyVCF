@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+
+# Author: Lenna X. Peterson
+# github.com/lennax
+# arklenna at gmail dot com
+
 import argparse
 import sys
 import warnings
