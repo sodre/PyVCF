@@ -3,6 +3,7 @@ import unittest
 import doctest
 import os
 import commands
+import subprocess
 from StringIO import StringIO
 
 import vcf
@@ -633,6 +634,27 @@ class TestOpenMethods(unittest.TestCase):
         self.assertEqual(self.samples, r.samples)
 
 
+class TestSampleFilter(unittest.TestCase):
+    def testListSamples(self):
+        s, out = commands.getstatusoutput('python scripts/vcf_sample_filter.py vcf/test/example-4.1.vcf')
+        self.assertEqual(s, 0)
+        expected_out = """Samples:
+0: NA00001
+1: NA00002
+2: NA00003"""
+        self.assertEqual(out, expected_out)
+
+    def testWithFilter(self):
+        out = subprocess.Popen('python scripts/vcf_sample_filter.py vcf/test/example-4.1.vcf -f 1,2', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0]
+        buf = StringIO()
+        buf.write(out)
+        buf.seek(0)
+        #print(buf.getvalue())
+        reader = vcf.Reader(buf)
+        self.assertEqual(reader.samples, ['NA00001'])
+        #print(reader.next())
+
+
 class TestFilter(unittest.TestCase):
 
 
@@ -760,6 +782,7 @@ suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestSamtoolsOutput))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestWriter))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestTabix))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestOpenMethods))
+suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestSampleFilter))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestFilter))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(Test1kg))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestRecord))
