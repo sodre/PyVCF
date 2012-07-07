@@ -107,4 +107,5 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    SampleFilter(args.file, args.outfile, args.filter, args.invert)
+    SampleFilter(infile=args.file, outfile=args.o,
+                 filters=args.f, invert=args.invert)
