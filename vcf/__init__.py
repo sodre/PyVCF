@@ -59,7 +59,7 @@ a ``True`` value. Integers and floats are handled exactly as you'd expect::
     >>> print record.INFO['AF']
     [0.5]
 
-There are a number of convienience methods and properties for each ``Record`` allowing you to
+There are a number of convenience methods and properties for each ``Record`` allowing you to
 examine properties of interest::
 
     >>> print record.num_called, record.call_rate, record.num_unknown
@@ -176,5 +176,6 @@ from vcf.parser import Reader, Writer
 from vcf.parser import VCFReader, VCFWriter
 from vcf.filters import Base as Filter
 from vcf.parser import RESERVED_INFO, RESERVED_FORMAT
+from vcf.sample_filter import SampleFilter
 
 VERSION = '0.5.0'
