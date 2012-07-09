@@ -4,6 +4,7 @@
 # github.com/lennax
 # arklenna at gmail dot com
 
+import logging
 import sys
 import warnings
 
@@ -46,10 +47,6 @@ class SampleFilter(object):
         if filters is not None:
             self.set_filters()
             self.write()
-        else:
-            print "Samples:"
-            for idx, val in enumerate(self.samples):
-                print "{0}: {1}".format(idx, val)
 
     def set_filters(self, filters=None, invert=False):
         """Convert filters from string to list of indices, set on Reader"""
@@ -83,7 +80,8 @@ class SampleFilter(object):
 
         # `sample_filter` setter updates `samples`
         self.parser.sample_filter = filters
-        sys.stderr.write("Keeping these samples: {0}\n".format(self.parser.samples))
+        logging.info("Keeping these samples: {0}\n".format(self.parser.samples))
+        return self.parser.samples
 
     def write(self, outfile=None):
         if outfile is not None:
@@ -92,7 +90,7 @@ class SampleFilter(object):
             _out = sys.stdout
         else:
             _out = open(self.outfile, "wb")
-        sys.stderr.write("Writing to '{0}'\n".format(self.outfile))
+        logging.info("Writing to '{0}'\n".format(self.outfile))
         writer = Writer(_out, self.parser)
         for row in self.parser:
             writer.write_record(row)
