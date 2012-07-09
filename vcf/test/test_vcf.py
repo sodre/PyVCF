@@ -636,16 +636,19 @@ class TestOpenMethods(unittest.TestCase):
 
 class TestSampleFilter(unittest.TestCase):
     def testCLIListSamples(self):
-        s, out = commands.getstatusoutput('python scripts/vcf_sample_filter.py vcf/test/example-4.1.vcf')
-        self.assertEqual(s, 0)
-        expected_out = """Samples:
-0: NA00001
-1: NA00002
-2: NA00003"""
-        self.assertEqual(out, expected_out)
+        proc = subprocess.Popen('python scripts/vcf_sample_filter.py vcf/test/example-4.1.vcf', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out, err = proc.communicate()
+        self.assertEqual(proc.returncode, 0)
+        self.assertFalse(err)
+        expected_out = ['Samples:', '0: NA00001', '1: NA00002', '2: NA00003']
+        self.assertEqual(out.splitlines(), expected_out)
 
     def testCLIWithFilter(self):
-        out = subprocess.Popen('python scripts/vcf_sample_filter.py vcf/test/example-4.1.vcf -f 1,2', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0]
+        proc = subprocess.Popen('python scripts/vcf_sample_filter.py vcf/test/example-4.1.vcf -f 1,2 --quiet', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out, err = proc.communicate()
+        self.assertEqual(proc.returncode, 0)
+        self.assertTrue(out)
+        self.assertFalse(err)
         buf = StringIO()
         buf.write(out)
         buf.seek(0)
