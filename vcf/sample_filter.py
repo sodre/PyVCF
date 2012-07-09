@@ -35,6 +35,7 @@ class SampleFilter(object):
         # Add property to Reader for filter list
         Reader.sample_filter = property(get_filter, set_filter)
         # Modify Reader._parse_samples to filter samples
+        self._orig_parse_samples = Reader._parse_samples
         Reader._parse_samples = filter_samples(Reader._parse_samples)
         self.parser = Reader(filename=infile)
         # Store initial samples and indices
@@ -88,9 +89,15 @@ class SampleFilter(object):
             self.outfile = outfile
         if self.outfile is None:
             _out = sys.stdout
+        elif hasattr(self.outfile, 'write'):
+            _out = self.outfile
         else:
             _out = open(self.outfile, "wb")
         logging.info("Writing to '{0}'\n".format(self.outfile))
         writer = Writer(_out, self.parser)
         for row in self.parser:
             writer.write_record(row)
+
+    def undo_monkey_patch(self):
+        delattr(Reader, 'sample_filter')
+        Reader._parse_samples = self._orig_parse_samples

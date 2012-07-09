@@ -635,7 +635,7 @@ class TestOpenMethods(unittest.TestCase):
 
 
 class TestSampleFilter(unittest.TestCase):
-    def testListSamples(self):
+    def testCLIListSamples(self):
         s, out = commands.getstatusoutput('python scripts/vcf_sample_filter.py vcf/test/example-4.1.vcf')
         self.assertEqual(s, 0)
         expected_out = """Samples:
@@ -644,7 +644,7 @@ class TestSampleFilter(unittest.TestCase):
 2: NA00003"""
         self.assertEqual(out, expected_out)
 
-    def testWithFilter(self):
+    def testCLIWithFilter(self):
         out = subprocess.Popen('python scripts/vcf_sample_filter.py vcf/test/example-4.1.vcf -f 1,2', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0]
         buf = StringIO()
         buf.write(out)
@@ -652,7 +652,29 @@ class TestSampleFilter(unittest.TestCase):
         #print(buf.getvalue())
         reader = vcf.Reader(buf)
         self.assertEqual(reader.samples, ['NA00001'])
-        #print(reader.next())
+        rec = reader.next()
+        self.assertEqual(len(rec.samples), 1)
+
+    def testSampleFilterModule(self):
+        # init filter with filename, get list of samples
+        filt = vcf.SampleFilter('vcf/test/example-4.1.vcf')
+        self.assertEqual(filt.samples, ['NA00001', 'NA00002', 'NA00003'])
+        # set filter, check which samples will be kept
+        filtered = filt.set_filters(filters="0", invert=True)
+        self.assertEqual(filtered, ['NA00001'])
+        # write filtered file to StringIO
+        buf = StringIO()
+        filt.write(buf)
+        buf.seek(0)
+        #print(buf.getvalue())
+        # undo monkey patch
+        filt.undo_monkey_patch()
+        # read output
+        reader = vcf.Reader(buf)
+        self.assertEqual(reader.samples, ['NA00001'])
+        print(dir(reader))
+        rec = reader.next()
+        self.assertEqual(len(rec.samples), 1)
 
 
 class TestFilter(unittest.TestCase):
