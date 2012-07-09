@@ -13,8 +13,8 @@ from parser import Reader, Writer
 class SampleFilter(object):
     """
     Modifies the vcf Reader to filter each row by sample as it is parsed.
-    When using the class, be sure to call `undo_monkey_patch()` to restore
-    the original functionality to the Reader.
+    After using this class, call del on its instance to remove filtering
+    and restore the original functionality to the Reader.
 
     """
 
@@ -56,7 +56,7 @@ class SampleFilter(object):
 
     def __del__(self):
         try:
-            self.undo_monkey_patch()
+            self._undo_monkey_patch()
         except AttributeError:
             pass
 
@@ -111,6 +111,6 @@ class SampleFilter(object):
         for row in self.parser:
             writer.write_record(row)
 
-    def undo_monkey_patch(self):
+    def _undo_monkey_patch(self):
         Reader._parse_samples = self._orig_parse_samples
         delattr(Reader, 'sample_filter')

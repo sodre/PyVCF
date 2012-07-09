@@ -670,8 +670,8 @@ class TestSampleFilter(unittest.TestCase):
         filt.write(buf)
         buf.seek(0)
         #print(buf.getvalue())
-        # undo monkey patch
-        filt.undo_monkey_patch()
+        # undo monkey patch by destroying instance
+        del filt
         self.assertTrue('sample_filter' not in dir(vcf.Reader))
         # read output
         reader = vcf.Reader(buf)
