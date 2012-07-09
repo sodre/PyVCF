@@ -54,6 +54,12 @@ class SampleFilter(object):
             self.set_filters()
             self.write()
 
+    def __del__(self):
+        try:
+            self.undo_monkey_patch()
+        except AttributeError:
+            pass
+
     def set_filters(self, filters=None, invert=False):
         """Convert filters from string to list of indices, set on Reader"""
         if filters is not None:
@@ -86,6 +92,8 @@ class SampleFilter(object):
 
         # `sample_filter` setter updates `samples`
         self.parser.sample_filter = filters
+        if len(self.parser.samples) == 0:
+            warnings.warn("Number of samples to keep is zero", RuntimeWarning)
         logging.info("Keeping these samples: {0}\n".format(self.parser.samples))
         return self.parser.samples
 
