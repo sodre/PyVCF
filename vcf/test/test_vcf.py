@@ -669,10 +669,10 @@ class TestSampleFilter(unittest.TestCase):
         #print(buf.getvalue())
         # undo monkey patch
         filt.undo_monkey_patch()
+        self.assertTrue('sample_filter' not in dir(vcf.Reader))
         # read output
         reader = vcf.Reader(buf)
         self.assertEqual(reader.samples, ['NA00001'])
-        print(dir(reader))
         rec = reader.next()
         self.assertEqual(len(rec.samples), 1)
 

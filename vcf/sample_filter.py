@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Author: Lenna X. Peterson
 # github.com/lennax
 # arklenna at gmail dot com
@@ -13,6 +11,13 @@ from parser import Reader, Writer
 
 
 class SampleFilter(object):
+    """
+    Modifies the vcf Reader to filter each row by sample as it is parsed.
+    When using the class, be sure to call `undo_monkey_patch()` to restore
+    the original functionality to the Reader.
+
+    """
+
     def __init__(self, infile, outfile=None, filters=None, invert=False):
         # Methods to add to Reader
         def get_filter(self):
@@ -99,5 +104,5 @@ class SampleFilter(object):
             writer.write_record(row)
 
     def undo_monkey_patch(self):
-        delattr(Reader, 'sample_filter')
         Reader._parse_samples = self._orig_parse_samples
+        delattr(Reader, 'sample_filter')
