@@ -13,8 +13,6 @@ from parser import Reader, Writer
 class SampleFilter(object):
     """
     Modifies the vcf Reader to filter each row by sample as it is parsed.
-    After using this class, call del on its instance to remove filtering
-    and restore the original functionality to the Reader.
 
     """
 
@@ -39,6 +37,7 @@ class SampleFilter(object):
 
         # Add property to Reader for filter list
         Reader.sample_filter = property(get_filter, set_filter)
+        Reader._samp_filter = []
         # Modify Reader._parse_samples to filter samples
         self._orig_parse_samples = Reader._parse_samples
         Reader._parse_samples = filter_samples(Reader._parse_samples)
