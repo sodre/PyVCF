@@ -13,7 +13,7 @@ class _Call(object):
         self.site = site
         #: The sample name
         self.sample = sample
-        #: Dictionary of data from the VCF file
+        #: tuple of data from the VCF file
         self.data = data
         try:
             self.gt_nums = self.data.GT
@@ -104,6 +104,10 @@ class _Call(object):
         if not self.called:
             return None
         return self.gt_type == 1
+
+    def add_field(self, name, value):
+        new_cls = make_calldata_tuple(list(self.data._fields) + [name])
+        self.data = new_cls._make(list(iter(self.data)) + [value])
 
 
 class _Record(object):
@@ -525,9 +529,14 @@ class _SV(_AltRecord):
     def __repr__(self):
         return str(self)
 
-
+_calldata_tuples = {}
 def make_calldata_tuple(fields):
     """ Return a namedtuple for a given call format """
+
+    # memoization
+    fields = tuple(fields)
+    if fields in _calldata_tuples:
+        return _calldata_tuples[fields]
 
     class CallData(collections.namedtuple('calldata', fields)):
         __slots__ = ()
@@ -539,5 +548,7 @@ def make_calldata_tuple(fields):
             dat = ", ".join(["%s=%s" % (x, y)
                 for (x, y) in zip(self._fields, self)])
             return "CallData(" + dat + ')'
+
+    _calldata_tuples[fields] = CallData
 
     return CallData
