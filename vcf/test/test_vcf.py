@@ -802,6 +802,23 @@ class TestUtils(unittest.TestCase):
                              expected.split())
 
 
+class TestAddCallData(unittest.TestCase):
+
+    def setUp(self):
+        output = StringIO()
+        reader = vcf.Reader(fh('example-4.1.vcf'))
+        writer = vcf.Writer(output, reader)
+
+        for line in reader:
+            if line.POS == 17330:
+                line.samples[1].add_field('FOO', 'BAR')
+            writer.write_record(line)
+        self.result = output.getvalue()
+
+    def test_output(self):
+        print(self.result)
+        1/0
+
 
 
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestGatkOutput))
