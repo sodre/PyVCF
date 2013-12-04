@@ -425,6 +425,11 @@ class TestRecord(unittest.TestCase):
                          var.num_het + var.num_unknown)
             self.assertEqual(len(var.samples), num_calls)
 
+    def test_dunder_eq(self):
+        rec = vcf.Reader(fh('example-4.0.vcf')).next()
+        self.assertFalse(rec == None)
+        self.assertFalse(None == rec)
+
     def test_call_rate(self):
         reader = vcf.Reader(fh('example-4.0.vcf'))
         for var in reader:
@@ -732,6 +737,13 @@ class TestRecord(unittest.TestCase):
 
 
 class TestCall(unittest.TestCase):
+
+    def test_dunder_eq(self):
+        reader = vcf.Reader(fh('example-4.0.vcf'))
+        var = reader.next()
+        example_call = var.samples[0]
+        self.assertFalse(example_call == None)
+        self.assertFalse(None == example_call)
 
     def test_phased(self):
         reader = vcf.Reader(fh('example-4.0.vcf'))
