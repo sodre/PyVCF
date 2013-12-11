@@ -249,6 +249,18 @@ class _Record(object):
         num_chroms = float(2.0 * self.num_called)
         return float(num_chroms / (num_chroms - 1.0)) * (2.0 * p * q)
 
+    @property
+    def heterozygosity(self):
+        """
+        Heterozygosity of a site. Heterozygosity gives the probability that
+        two randomly chosen chromosomes from the population have different
+        alleles, giving a measurement of the degree of polymorphism in a population.
+
+        If there are i alleles with frequency p_i, H-1-sum_i(p_i^2)
+        """
+        allele_freqs = [1-sum(self.aaf)] + self.aaf
+        return 1 - sum(map(lambda x: x**2, allele_freqs))
+
     def get_hom_refs(self):
         """ The list of hom ref genotypes"""
         return [s for s in self.samples if s.gt_type == 0]
