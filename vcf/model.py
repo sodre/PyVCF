@@ -254,9 +254,9 @@ class _Record(object):
         """
         Heterozygosity of a site. Heterozygosity gives the probability that
         two randomly chosen chromosomes from the population have different
-        alleles, giving a measurement of the degree of polymorphism in a population.
+        alleles, giving a measure of the degree of polymorphism in a population.
 
-        If there are i alleles with frequency p_i, H-1-sum_i(p_i^2)
+        If there are i alleles with frequency p_i, H=1-sum_i(p_i^2)
         """
         allele_freqs = [1-sum(self.aaf)] + self.aaf
         return 1 - sum(map(lambda x: x**2, allele_freqs))
