@@ -523,7 +523,7 @@ class Reader(object):
 
     def next(self):
         '''Return the next record in the file.'''
-        line = self.reader.next()
+        line = self.reader.next().rstrip()
         row = re.split(self._separator, line)
         chrom = row[0]
         if self._prepend_chr:
