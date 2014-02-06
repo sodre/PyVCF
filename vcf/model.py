@@ -36,6 +36,8 @@ class _Call(object):
         """ Two _Calls are equal if their _Records are equal
             and the samples and ``gt_type``s are the same
         """
+        if not isinstance(other, self.__class__):
+            return False
         return (self.site == other.site
                 and self.sample == other.sample
                 and self.gt_type == other.gt_type)
@@ -155,6 +157,10 @@ class _Record(object):
     # For Python 3
     def __eq__(self, other):
         """ _Records are equal if they describe the same variant (same position, alleles) """
+        # a _Record is never equal with a non-Record
+        # do the check here to avoid AttributeError (i.e. None does not have CHROM)
+        if not isinstance(other, self.__class__):
+            return False
         return (self.CHROM == other.CHROM and
                 self.POS == other.POS and
                 self.REF == other.REF and
@@ -459,6 +465,8 @@ class _AltRecord(object):
         raise NotImplementedError
 
     def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
         return self.type == other.type
 
 
@@ -485,8 +493,9 @@ class _Substitution(_AltRecord):
     def __eq__(self, other):
         if isinstance(other, basestring):
             return self.sequence == other
-        else:
-            return super(_Substitution, self).__eq__(other) and self.sequence == other.sequence
+        elif not isinstance(other, self.__class__):
+            return False
+        return super(_Substitution, self).__eq__(other) and self.sequence == other.sequence
 
 
 class _Breakend(_AltRecord):
@@ -535,6 +544,8 @@ class _Breakend(_AltRecord):
             return self.connectingSequence + remoteTag
 
     def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
         return super(_Breakend, self).__eq__(other) \
                 and self.chr == other.chr \
                 and self.pos == other.pos \

@@ -425,6 +425,11 @@ class TestRecord(unittest.TestCase):
                          var.num_het + var.num_unknown)
             self.assertEqual(len(var.samples), num_calls)
 
+    def test_dunder_eq(self):
+        rec = vcf.Reader(fh('example-4.0.vcf')).next()
+        self.assertFalse(rec == None)
+        self.assertFalse(None == rec)
+
     def test_call_rate(self):
         reader = vcf.Reader(fh('example-4.0.vcf'))
         for var in reader:
@@ -748,6 +753,13 @@ class TestRecord(unittest.TestCase):
 
 class TestCall(unittest.TestCase):
 
+    def test_dunder_eq(self):
+        reader = vcf.Reader(fh('example-4.0.vcf'))
+        var = reader.next()
+        example_call = var.samples[0]
+        self.assertFalse(example_call == None)
+        self.assertFalse(None == example_call)
+
     def test_phased(self):
         reader = vcf.Reader(fh('example-4.0.vcf'))
         for var in reader:
@@ -967,17 +979,28 @@ class TestUtils(unittest.TestCase):
 
         # case with working custom equality function
 
-        # without custom function, exception should be raised
+        # without custom function, most records in these files
+        # are different since the default equality checks
+        # for ALT values
 
         reader1 = vcf.Reader(fh('example-4.0.vcf'))
         reader2 = vcf.Reader(fh('walk_refcall.vcf'))
-        self.assertRaises(AttributeError, next,
-                          utils.walk_together(reader1, reader2))
 
-        # with custom function, iteration works
+        # counters for distinct records and overlapping records
+        ndist_def, nover_def = 0, 0
+        for x in utils.walk_together(reader1, reader2):
+            assert len(x) == 2
+            if x[0] is not None and x[1] is not None:
+                assert (x[0] == x[1] and x[1] == x[0])
+                nover_def += 1
+            ndist_def += 1
+        # check how many overlapping records
+        assert nover_def == 1
+        # check how many distinct records
+        assert ndist_def == 8
 
-        reader1 = vcf.Reader(fh('example-4.0.vcf'))
-        reader2 = vcf.Reader(fh('walk_refcall.vcf'))
+        # with custom function that does not check ALT,
+        # we see more overlaps and less distinct records
 
         def custom_eq(rec1, rec2):
             # check for equality only on CHROM, POS, and REF
@@ -986,20 +1009,22 @@ class TestUtils(unittest.TestCase):
             return rec1.CHROM == rec2.CHROM and rec1.POS == rec2.POS and \
                     rec1.REF == rec2.REF
 
-        nrecs, ncomps = 0, 0
+        reader1 = vcf.Reader(fh('example-4.0.vcf'))
+        reader2 = vcf.Reader(fh('walk_refcall.vcf'))
+
+        ndist_cust, nover_cust = 0, 0
         for x in utils.walk_together(reader1, reader2, eq_func=custom_eq):
             assert len(x) == 2
-            # avoid assert() when one record is None
             if x[0] is not None and x[1] is not None:
                 assert (custom_eq(x[0], x[1]) and custom_eq(x[1], x[0]))
-                ncomps += 1
-            # still increment counter to ensure iteration is finished for all
-            # records
-            nrecs += 1
-        # check number of records total
-        assert nrecs == 5
-        # check how many records found in all files
-        assert ncomps == 4
+                nover_cust += 1
+            ndist_cust += 1
+        assert nover_cust == 4
+        assert ndist_cust == 5
+
+        # final check just to be absolutely sure
+        assert ndist_def != ndist_cust
+        assert nover_def != nover_cust
 
     def test_trim(self):
         tests = [('TAA GAA', 'T G'),
