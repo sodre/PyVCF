@@ -470,6 +470,21 @@ class TestRecord(unittest.TestCase):
             elif var.POS == 1234567:
                 self.assertEqual(None, pi)
 
+    def test_heterozygosity(self):
+        reader = vcf.Reader(fh('example-4.0.vcf'))
+        for var in reader:
+            het = var.heterozygosity
+            if var.POS == 14370:
+                self.assertEqual(0.5, het)
+            if var.POS == 17330:
+                self.assertEqual(1-((1.0/6)**2 + (5.0/6)**2), het)
+            if var.POS == 1110696:
+                self.assertEqual(4.0/9.0, het)
+            if var.POS == 1230237:
+                self.assertEqual(0.0, het)
+            elif var.POS == 1234567:
+                self.assertEqual(5.0/8.0, het)
+
     def test_is_snp(self):
         reader = vcf.Reader(fh('example-4.0.vcf'))
         for r in reader:
