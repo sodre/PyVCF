@@ -17,6 +17,20 @@ New features should have test code sent with them.
 Changes
 =======
 
+0.6.5 Release
+-------------
+
+* Better contig handling (#115, #116, #119 thanks Martijn)
+* INFO lines with type character (#120, #121 thanks @AndrewUzilov, Martijn)
+* Single breakends fix (#126 thanks @pkrushe)
+* Speedup by losing ordering of INFO (#128 thanks Martijn)
+* HOMSEQ and other missing fields in INFO (#130 thanks Martijn)
+* Add aaf property, (thanks @mgymrek #131)
+* Custom equality for walk_together, thanks bow #132
+* Change default line encoding to '\n'
+* Improved __eq__ (#134, thanks bow)
+
+
 0.6.4 Release
 -------------
 
