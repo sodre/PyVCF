@@ -17,6 +17,11 @@ New features should have test code sent with them.
 Changes
 =======
 
+0.6.6 Release
+-------------
+
+* better walk together record ordering (Thanks @datagram, #141)
+
 0.6.5 Release
 -------------
 
