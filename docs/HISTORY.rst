@@ -17,6 +17,11 @@ New features should have test code sent with them.
 Changes
 =======
 
+0.6.7 Release
+-------------
+
+* Include missing .pyx files 
+
 0.6.6 Release
 -------------
 
