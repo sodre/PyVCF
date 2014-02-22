@@ -5,6 +5,7 @@ import os
 import commands
 import cPickle
 from StringIO import StringIO
+import subprocess
 
 import vcf
 from vcf import utils
