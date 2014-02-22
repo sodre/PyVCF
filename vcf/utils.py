@@ -2,35 +2,56 @@
 Utilities for VCF files.
 """
 
-
-def walk_together(*readers):
-    """ Simultaneously iteratate two or more VCF readers and return
-        lists of concurrent records from each
-        reader, with None if no record present.  Caller must check the
-        inputs are sorted in the same way and use the same reference
-        otherwise behaviour is undefined.
+def walk_together(*readers, **kwargs):
     """
-    nexts = [reader.next() for reader in readers]
+    Simultaneously iteratate over two or more VCF readers. For each 
+    genomic position with a variant, return a list of size equal to the number 
+    of VCF readers. This list contains the VCF record from readers that have
+    this variant, and None for readers that don't have it. 
+    The caller must make sure that inputs are sorted in the same way and use the 
+    same reference otherwise behaviour is undefined.
 
-    while True:
-        min_next = min([x for x in nexts if x is not None])
+    Args:
+        vcf_record_sort_key: function that takes a VCF record and returns a 
+            tuple that can be used as a key for comparing and sorting VCF 
+            records across all readers. This tuple defines what it means for two 
+            variants to be equal (eg. whether it's only their position or also 
+            their allele values), and implicitly determines the chromosome 
+            ordering since the tuple's 1st element is typically the chromosome 
+            name (or calculated from it).
+    """
+    if 'vcf_record_sort_key' in kwargs:
+        get_key = kwargs['vcf_record_sort_key']
+    else:
+        get_key = lambda r: (r.CHROM, r.POS) #, r.REF, r.ALT)
 
-        # this line uses equality on Records, which checks the ALTs
-        # not sure what to do with records that have overlapping but different
-        # variation
-        yield [x if x is None or x == min_next else None for x in nexts]
+    nexts = []
+    for reader in readers:
+        try:
+            nexts.append(reader.next())
+        except StopIteration:
+            nexts.append(None)
 
-        # update nexts that we just yielded
-        for i, n in enumerate(nexts):
+    min_k = (None,)   # keep track of the previous min key's contig
+    while any([r is not None for r in nexts]):
+        next_idx_to_k = dict(
+            (i, get_key(r)) for i, r in enumerate(nexts) if r is not None)
+        keys_with_prev_contig = [
+            k for k in next_idx_to_k.values() if k[0] == min_k[0]]
 
-            if n is not None and n == min_next:
-                try:
-                    nexts[i] = readers[i].next()
-                except StopIteration:
-                    nexts[i] = None
+        if any(keys_with_prev_contig):
+            min_k = min(keys_with_prev_contig)   # finish previous contig
+        else:
+            min_k = min(next_idx_to_k.values())   # move on to next contig
 
-        if all([x is None for x in nexts]):
-            break
+        min_k_idxs = set([i for i, k in next_idx_to_k.items() if k == min_k])
+        yield [nexts[i] if i in min_k_idxs else None for i in range(len(nexts))]
+
+        for i in min_k_idxs:
+            try:
+                nexts[i] = readers[i].next()
+            except StopIteration:
+                nexts[i] = None
 
 
 def trim_common_suffix(*sequences):

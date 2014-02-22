@@ -17,6 +17,72 @@ New features should have test code sent with them.
 Changes
 =======
 
+0.6.7 Release
+-------------
+
+* Include missing .pyx files 
+
+0.6.6 Release
+-------------
+
+* better walk together record ordering (Thanks @datagram, #141)
+
+0.6.5 Release
+-------------
+
+* Better contig handling (#115, #116, #119 thanks Martijn)
+* INFO lines with type character (#120, #121 thanks @AndrewUzilov, Martijn)
+* Single breakends fix (#126 thanks @pkrushe)
+* Speedup by losing ordering of INFO (#128 thanks Martijn)
+* HOMSEQ and other missing fields in INFO (#130 thanks Martijn)
+* Add aaf property, (thanks @mgymrek #131)
+* Custom equality for walk_together, thanks bow #132
+* Change default line encoding to '\n'
+* Improved __eq__ (#134, thanks bow)
+
+
+0.6.4 Release
+-------------
+
+* Handle INFO fields with multiple values, thanks
+* Support writing records without GT data #88, thanks @bow
+* Pickleable call data #112, thanks @superbobry
+* Write files without FORMAT #95 thanks Martijn
+* Strict whitespace mode, thanks Martijn, Lee Lichtenstein and Manawsi Gupta
+* Add support for contigs in header, thanks @gcnh and Martijn
+* Fix GATK header parsing, thanks @alimanfoo
+
+0.6.3 Release
+-------------
+
+* cython port of #79
+* correct writing of meta lines #84 
+
+0.6.2 Release
+-------------
+
+* issues #78, #79 (thanks Sean, Brad) 
+
+0.6.1 Release
+-------------
+
+* Add strict whitespace mode for well formed VCFs with spaces 
+  in sample names (thanks Marco)
+* Ignore blank lines in files (thanks Martijn)
+* Tweaks for handling missing data (thanks Sean)
+* bcftools tests (thanks Martijn)
+* record.FILTER is always a list
+
+0.6.0 Release
+-------------
+
+* Backwards incompatible change: _Call.data is now a 
+  namedtuple (previously it was a dict)
+* Optional cython version, much improved performance.  
+* Improvements to writer (thanks @cmclean)
+* Improvements to inheritance of classes (thanks @lennax)
+
+
 0.5.0 Release
 -------------
 

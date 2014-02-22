@@ -30,25 +30,30 @@ from model import _Substitution, _Breakend, _SingleBreakend, _SV
 RESERVED_INFO = {
     'AA': 'String', 'AC': 'Integer', 'AF': 'Float', 'AN': 'Integer',
     'BQ': 'Float', 'CIGAR': 'String', 'DB': 'Flag', 'DP': 'Integer',
-    'END': 'Integer', 'H2': 'Flag', 'MQ': 'Float', 'MQ0': 'Integer',
-    'NS': 'Integer', 'SB': 'String', 'SOMATIC': 'Flag', 'VALIDATED': 'Flag',
+    'END': 'Integer', 'H2': 'Flag', 'H3': 'Flag', 'MQ': 'Float',
+    'MQ0': 'Integer', 'NS': 'Integer', 'SB': 'String', 'SOMATIC': 'Flag',
+    'VALIDATED': 'Flag', '1000G': 'Flag',
 
-    # VCF 4.1 Additions
-    'IMPRECISE':'Flag', 'NOVEL':'Flag', 'END':'Integer', 'SVTYPE':'String',
-    'CIPOS':'Integer','CIEND':'Integer','HOMLEN':'Integer','HOMSEQ':'Integer',
-    'BKPTID':'String','MEINFO':'String','METRANS':'String','DGVID':'String',
-    'DBVARID':'String','MATEID':'String','PARID':'String','EVENT':'String',
-    'CILEN':'Integer','CN':'Integer','CNADJ':'Integer','CICN':'Integer',
-    'CICNADJ':'Integer'
+    # Keys used for structural variants
+    'IMPRECISE': 'Flag', 'NOVEL': 'Flag', 'SVTYPE': 'String',
+    'SVLEN': 'Integer', 'CIPOS': 'Integer', 'CIEND': 'Integer',
+    'HOMLEN': 'Integer', 'HOMSEQ': 'String', 'BKPTID': 'String',
+    'MEINFO': 'String', 'METRANS': 'String', 'DGVID': 'String',
+    'DBVARID': 'String', 'DBRIPID': 'String', 'MATEID': 'String',
+    'PARID': 'String', 'EVENT': 'String', 'CILEN': 'Integer',
+    'DPADJ': 'Integer', 'CN': 'Integer', 'CNADJ': 'Integer',
+    'CICN': 'Integer', 'CICNADJ': 'Integer'
 }
 
 RESERVED_FORMAT = {
     'GT': 'String', 'DP': 'Integer', 'FT': 'String', 'GL': 'Float',
-    'GQ': 'Float', 'HQ': 'Float',
+    'GLE': 'String', 'PL': 'Integer', 'GP': 'Float', 'GQ': 'Integer',
+    'HQ': 'Integer', 'PS': 'Integer', 'PQ': 'Integer', 'EC': 'Integer',
+    'MQ': 'Integer',
 
-    # VCF 4.1 Additions
-    'CN':'Integer','CNQ':'Float','CNL':'Float','NQ':'Integer','HAP':'Integer',
-    'AHAP':'Integer'
+    # Keys used for structural variants
+    'CN': 'Integer', 'CNQ': 'Float', 'CNL': 'Float', 'NQ': 'Integer',
+    'HAP': 'Integer', 'AHAP': 'Integer'
 }
 
 # Spec is a bit weak on which metadata lines are singular, like fileformat
@@ -68,6 +73,7 @@ _Filter = collections.namedtuple('Filter', ['id', 'desc'])
 _Alt = collections.namedtuple('Alt', ['id', 'desc'])
 _Format = collections.namedtuple('Format', ['id', 'num', 'type', 'desc'])
 _SampleInfo = collections.namedtuple('SampleInfo', ['samples', 'gt_bases', 'gt_types', 'gt_phases'])
+_Contig = collections.namedtuple('Contig', ['id', 'length'])
 
 
 class _vcf_metadata_parser(object):
@@ -93,6 +99,12 @@ class _vcf_metadata_parser(object):
             Number=(?P<number>-?\d+|\.|[AG]),
             Type=(?P<type>.+),
             Description="(?P<desc>.*)"
+            >''', re.VERBOSE)
+        self.contig_pattern = re.compile(r'''\#\#contig=<
+            ID=(?P<id>[^,]+),
+            .*
+            length=(?P<length>-?\d+)
+            .*
             >''', re.VERBOSE)
         self.meta_pattern = re.compile(r'''##(?P<key>.+?)=(?P<val>.+)''')
 
@@ -153,13 +165,56 @@ class _vcf_metadata_parser(object):
                        match.group('type'), match.group('desc'))
 
         return (match.group('id'), form)
+    
+    def read_contig(self, contig_string):
+        '''Read a meta-contigrmation INFO line.'''
+        match = self.contig_pattern.match(contig_string)
+        if not match:
+            raise SyntaxError(
+                "One of the contig lines is malformed: %s" % contig_string)
+
+        length = self.vcf_field_count(match.group('length'))
+
+        contig = _Contig(match.group('id'), length)
+
+        return (match.group('id'), contig)
+
 
     def read_meta_hash(self, meta_string):
         items = re.split("[<>]", meta_string)
         # Removing initial hash marks and final equal sign
         key = items[0][2:-1]
-        hashItems = items[1].split(',')
-        val = dict(item.split("=") for item in hashItems)
+        # N.B., items can have quoted values, so cannot just split on comma
+        val = OrderedDict()
+        state = 0
+        k = ''
+        v = ''
+        for c in items[1]:
+
+            if state == 0:  # reading item key
+                if c == '=':
+                    state = 1  # end of key, start reading value
+                else:
+                    k += c  # extend key
+            elif state == 1:  # reading item value
+                if v == '' and c == '"':
+                    v += c  # include quote mark in value
+                    state = 2  # start reading quoted value
+                elif c == ',':
+                    val[k] = v  # store parsed item
+                    state = 0  # read next key
+                    k = ''
+                    v = ''
+                else:
+                    v += c
+            elif state == 2:  # reading quoted item value
+                if c == '"':
+                    v += c  # include quote mark in value
+                    state = 1  # end quoting
+                else:
+                    v += c
+        if k != '':
+            val[k] = v
         return key, val
 
     def read_meta(self, meta_string):
@@ -173,12 +228,19 @@ class _vcf_metadata_parser(object):
 class Reader(object):
     """ Reader for a VCF v 4.0 file, an iterator returning ``_Record objects`` """
 
-    def __init__(self, fsock=None, filename=None, compressed=False, prepend_chr=False):
+    def __init__(self, fsock=None, filename=None, compressed=False, prepend_chr=False,
+                 strict_whitespace=False):
         """ Create a new Reader for a VCF file.
 
             You must specify either fsock (stream) or filename.  Gzipped streams
             or files are attempted to be recogized by the file extension, or gzipped
             can be forced with ``compressed=True``
+
+            'prepend_chr=True' will put 'chr' before all the CHROM values, useful
+            for different sources.
+
+            'strict_whitespace=True' will split records on tabs only (as with VCF
+            spec) which allows you to parse files with spaces in the sample names.
         """
         super(Reader, self).__init__()
 
@@ -186,18 +248,25 @@ class Reader(object):
             raise Exception('You must provide at least fsock or filename')
 
         if fsock:
-            self.reader = fsock
+            self._reader = fsock
             if filename is None and hasattr(fsock, 'name'):
                 filename = fsock.name
                 compressed = compressed or filename.endswith('.gz')
         elif filename:
             compressed = compressed or filename.endswith('.gz')
-            self.reader = open(filename, 'rb' if compressed else 'rt')
+            self._reader = open(filename, 'rb' if compressed else 'rt')
         self.filename = filename
         if compressed:
-            self.reader = gzip.GzipFile(fileobj=self.reader)
+            self._reader = gzip.GzipFile(fileobj=self._reader)
             if sys.version > '3':
-                self.reader = codecs.getreader('ascii')(self.reader)
+                self._reader = codecs.getreader('ascii')(self._reader)
+
+        if strict_whitespace:
+            self._separator = '\t'
+        else:
+            self._separator = '\t| +'
+
+        self.reader = (line.strip() for line in self._reader if line.strip())
 
         #: metadata fields from header (string or hash, depending)
         self.metadata = None
@@ -209,9 +278,12 @@ class Reader(object):
         self.alts = None
         #: FORMAT fields from header
         self.formats = None
+        #: contig fields from header
+        self.contigs = None
         self.samples = None
         self._sample_indexes = None
         self._header_lines = []
+        self._column_headers = []
         self._tabix = None
         self._prepend_chr = prepend_chr
         self._parse_metainfo()
@@ -225,7 +297,7 @@ class Reader(object):
 
         The end user shouldn't have to use this.  She can access the metainfo
         directly with ``self.metadata``.'''
-        for attr in ('metadata', 'infos', 'filters', 'alts', 'formats'):
+        for attr in ('metadata', 'infos', 'filters', 'alts', 'contigs', 'formats'):
             setattr(self, attr, OrderedDict())
 
         parser = _vcf_metadata_parser()
@@ -233,7 +305,6 @@ class Reader(object):
         line = self.reader.next()
         while line.startswith('##'):
             self._header_lines.append(line)
-            line = line.strip()
 
             if line.startswith('##INFO'):
                 key, val = parser.read_info(line)
@@ -250,9 +321,13 @@ class Reader(object):
             elif line.startswith('##FORMAT'):
                 key, val = parser.read_format(line)
                 self.formats[key] = val
+            
+            elif line.startswith('##contig'):
+                key, val = parser.read_contig(line)
+                self.contigs[key] = val
 
             else:
-                key, val = parser.read_meta(line.strip())
+                key, val = parser.read_meta(line)
                 if key in SINGULAR_METADATA:
                     self.metadata[key] = val
                 else:
@@ -262,7 +337,8 @@ class Reader(object):
 
             line = self.reader.next()
 
-        fields = re.split('\t| +', line.rstrip())
+        fields = re.split(self._separator, line[1:])
+        self._column_headers = fields[:9]
         self.samples = fields[9:]
         self._sample_indexes = dict([(x,i) for (i,x) in enumerate(self.samples)])
 
@@ -280,7 +356,7 @@ class Reader(object):
             return {}
 
         entries = info_str.split(';')
-        retdict = OrderedDict()
+        retdict = {}
 
         for entry in entries:
             entry = entry.split('=')
@@ -298,20 +374,26 @@ class Reader(object):
 
             if entry_type == 'Integer':
                 vals = entry[1].split(',')
-                val = self._map(int, vals)
+                try:
+                    val = self._map(int, vals)
+                # Allow specified integers to be flexibly parsed as floats.
+                # Handles cases with incorrectly specified header types.
+                except ValueError:
+                    val = self._map(float, vals)
             elif entry_type == 'Float':
                 vals = entry[1].split(',')
                 val = self._map(float, vals)
             elif entry_type == 'Flag':
                 val = True
-            elif entry_type == 'String':
+            elif entry_type in ('String', 'Character'):
                 try:
-                    val = entry[1]
+                    vals = entry[1].split(',') # commas are reserved characters indicating multiple values
+                    val = self._map(str, vals)
                 except IndexError:
                     val = True
 
             try:
-                if self.infos[ID].num == 1 and entry_type != 'String':
+                if self.infos[ID].num == 1 and entry_type not in ( 'Flag', ):
                     val = val[0]
             except KeyError:
                 pass
@@ -379,7 +461,10 @@ class Reader(object):
                 if entry_num == 1 or ',' not in vals:
 
                     if entry_type == 'Integer':
-                        sampdat[i] = int(vals)
+                        try:
+                            sampdat[i] = int(vals)
+                        except ValueError:
+                            sampdat[i] = float(vals)
                     elif entry_type == 'Float':
                         sampdat[i] = float(vals)
                     else:
@@ -393,7 +478,10 @@ class Reader(object):
                 vals = vals.split(',')
 
                 if entry_type == 'Integer':
-                    sampdat[i] = _map(int, vals)
+                    try:
+                        sampdat[i] = _map(int, vals)
+                    except ValueError:
+                        sampdat[i] = _map(float, vals)
                 elif entry_type == 'Float' or entry_type == 'Numeric':
                     sampdat[i] = _map(float, vals)
                 else:
@@ -436,7 +524,7 @@ class Reader(object):
     def next(self):
         '''Return the next record in the file.'''
         line = self.reader.next()
-        row = re.split('\t| +', line.strip())
+        row = re.split(self._separator, line.rstrip())
         chrom = row[0]
         if self._prepend_chr:
             chrom = 'chr' + chrom
@@ -458,9 +546,13 @@ class Reader(object):
             except ValueError:
                 qual = None
 
-        filt = row[6].split(';') if ';' in row[6] else row[6]
-        if filt == 'PASS':
+        filt = row[6]
+        if filt == '.':
             filt = None
+        elif filt == 'PASS':
+            filt = []
+        else:
+            filt = filt.split(';')
         info = self._parse_info(row[7])
 
         try:
@@ -511,15 +603,19 @@ class Reader(object):
 class Writer(object):
     """VCF Writer. On Windows Python 2, open stream with 'wb'."""
 
-    fixed_fields = "#CHROM POS ID REF ALT QUAL FILTER INFO FORMAT".split()
-
     # Reverse keys and values in header field count dictionary
     counts = dict((v,k) for k,v in field_counts.iteritems())
 
-    def __init__(self, stream, template, eol=os.linesep):
-        self.writer = csv.writer(stream, delimiter="\t", lineterminator=eol)
+    def __init__(self, stream, template, lineterminator="\n"):
+        self.writer = csv.writer(stream, delimiter="\t", lineterminator=lineterminator)
         self.template = template
         self.stream = stream
+
+        # Order keys for INFO fields defined in the header (undefined fields
+        # get a maximum key).
+        self.info_order = collections.defaultdict(
+            lambda: len(template.infos),
+            dict(zip(template.infos.iterkeys(), itertools.count())))
 
         two = '##{key}=<ID={0},Description="{1}">\n'
         four = '##{key}=<ID={0},Number={num},Type={2},Description="{3}">\n'
@@ -528,7 +624,12 @@ class Writer(object):
             if key in SINGULAR_METADATA:
                 vals = [vals]
             for val in vals:
-                stream.write('##{0}={1}\n'.format(key, val))
+                if isinstance(val, dict):
+                    values = ','.join('{0}={1}'.format(key, value)
+                                      for key, value in val.items())
+                    stream.write('##{0}=<{1}>\n'.format(key, values))
+                else:
+                    stream.write('##{0}={1}\n'.format(key, val))
         for line in template.infos.itervalues():
             stream.write(four.format(key="INFO", *line, num=_num(line.num)))
         for line in template.formats.itervalues():
@@ -537,18 +638,23 @@ class Writer(object):
             stream.write(two.format(key="FILTER", *line))
         for line in template.alts.itervalues():
             stream.write(two.format(key="ALT", *line))
+        for line in template.contigs.itervalues():
+            stream.write('##contig=<ID={0},length={1}>\n'.format(*line))
 
         self._write_header()
 
     def _write_header(self):
         # TODO: write INFO, etc
-        self.writer.writerow(self.fixed_fields + self.template.samples)
+        self.stream.write('#' + '\t'.join(self.template._column_headers
+                                          + self.template.samples) + '\n')
 
     def write_record(self, record):
         """ write a record to the file """
         ffs = self._map(str, [record.CHROM, record.POS, record.ID, record.REF]) \
               + [self._format_alt(record.ALT), record.QUAL or '.', self._format_filter(record.FILTER),
-                 self._format_info(record.INFO), record.FORMAT]
+                 self._format_info(record.INFO)]
+        if record.FORMAT:
+            ffs.append(record.FORMAT)
 
         samples = [self._format_sample(record.FORMAT, sample)
             for sample in record.samples]
@@ -579,17 +685,44 @@ class Writer(object):
         return ','.join(self._map(str, alt))
 
     def _format_filter(self, flt):
-        return self._stringify(flt, none='PASS', delim=';')
+        if flt == []:
+            return 'PASS'
+        return self._stringify(flt, none='.', delim=';')
 
     def _format_info(self, info):
         if not info:
             return '.'
-        return ';'.join([self._stringify_pair(x,y) for x, y in info.iteritems()])
+        def order_key(field):
+            # Order by header definition first, alphabetically second.
+            return self.info_order[field], field
+        return ';'.join(self._stringify_pair(f, info[f]) for f in
+                        sorted(info, key=order_key))
 
     def _format_sample(self, fmt, sample):
-        if sample.data.GT is None:
-            return "./."
-        return ':'.join([self._stringify(x) for x in sample.data])
+        try:
+            # Try to get the GT value first.
+            gt = getattr(sample.data, 'GT')
+            # PyVCF stores './.' GT values as None, so we need to revert it back
+            # to './.' when writing.
+            if gt is None:
+                gt = './.'
+        except AttributeError:
+            # Failing that, try to check whether 'GT' is specified in the FORMAT
+            # field. If yes, use the recommended empty value ('./.')
+            if 'GT' in fmt:
+                gt = './.'
+            # Otherwise use an empty string as the value
+            else:
+                gt = ''
+        # If gt is an empty string (i.e. not stored), write all other data
+        if not gt:
+            return ':'.join([self._stringify(x) for x in sample.data])
+        # Otherwise use the GT values from above and combine it with the rest of
+        # the data.
+        # Note that this follows the VCF spec, where GT is always the first
+        # item whenever it is present.
+        else:
+            return ':'.join([gt] + [self._stringify(x) for x in sample.data[1:]])
 
     def _stringify(self, x, none='.', delim=','):
         if type(x) == type([]):

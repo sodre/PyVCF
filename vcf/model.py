@@ -2,6 +2,12 @@ from abc import ABCMeta, abstractmethod
 import collections
 import sys
 
+try:
+    from collections import Counter
+except ImportError:
+    from counter import Counter
+
+
 class _Call(object):
     """ A genotype call, a cell entry in a VCF file"""
 
@@ -20,7 +26,7 @@ class _Call(object):
             self.called = self.gt_nums is not None
         except AttributeError:
             self.gt_nums = None
-            # FIXME how do we know if a non GT call is called?
+            #62 a call without a genotype is not defined as called or not
             self.called = None
 
     def __repr__(self):
@@ -30,9 +36,16 @@ class _Call(object):
         """ Two _Calls are equal if their _Records are equal
             and the samples and ``gt_type``s are the same
         """
-        return (self.site == other.site
-                and self.sample == other.sample
-                and self.gt_type == other.gt_type)
+        return (self.site == getattr(other, "site", None)
+                and self.sample == getattr(other, "sample", None)
+                and self.gt_type == getattr(other, "gt_type", None))
+
+    def __getstate__(self):
+        return dict((attr, getattr(self, attr)) for attr in self.__slots__)
+
+    def __setstate__(self, state):
+        for attr in self.__slots__:
+            setattr(self, attr, state.get(attr))
 
     def gt_phase_char(self):
         return "/" if not self.phased else "|"
@@ -70,10 +83,14 @@ class _Call(object):
         if self.called:
             alleles = self.gt_alleles
             if all(X == alleles[0] for X in alleles[1:]):
-                if alleles[0] == "0": return 0
-                else: return 2
-            else: return 1
-        else: return None
+                if alleles[0] == "0":
+                    return 0
+                else:
+                    return 2
+            else:
+                return 1
+        else:
+            return None
 
     @property
     def phased(self):
@@ -128,15 +145,24 @@ class _Record(object):
         self.alleles = [self.REF]
         self.alleles.extend(self.ALT)
         #: list of ``_Calls`` for each sample ordered as in source VCF
-        self.samples = samples
+        self.samples = samples or []
         self._sample_indexes = sample_indexes
 
+    # For Python 2
+    def __cmp__(self, other):
+        return cmp((self.CHROM, self.POS), (getattr(other, "CHROM", None), getattr(other, "POS", None)))
+
+    # For Python 3
     def __eq__(self, other):
         """ _Records are equal if they describe the same variant (same position, alleles) """
-        return (self.CHROM == other.CHROM and
-                self.POS == other.POS and
-                self.REF == other.REF and
-                self.ALT == other.ALT)
+        return (self.CHROM == getattr(other, "CHROM", None) and
+                self.POS == getattr(other, "POS", None) and
+                self.REF == getattr(other, "REF", None) and
+                self.ALT == getattr(other, "ALT", None))
+
+    # For Python 3
+    def __lt__(self, other):
+        return (self.CHROM, self.POS) < (getattr(other, "CHROM", None), getattr(other, "POS", None))
 
     def __iter__(self):
         return iter(self.samples)
@@ -144,20 +170,14 @@ class _Record(object):
     def __str__(self):
         return "Record(CHROM=%(CHROM)s, POS=%(POS)s, REF=%(REF)s, ALT=%(ALT)s)" % self.__dict__
 
-    def __cmp__(self, other):
-        return cmp( (self.CHROM, self.POS), (other.CHROM, other.POS))
-
     def add_format(self, fmt):
         self.FORMAT = self.FORMAT + ':' + fmt
 
     def add_filter(self, flt):
-        if self.FILTER is None \
-        or self.FILTER == 'PASS'\
-        or self.FILTER == '.':
-            self.FILTER = ''
+        if self.FILTER is None:
+            self.FILTER = [flt]
         else:
-            self.FILTER = self.FILTER + ';'
-        self.FILTER = self.FILTER + flt
+            self.FILTER.append(flt)
 
     def add_info(self, info, value=True):
         self.INFO[info] = value
@@ -198,18 +218,16 @@ class _Record(object):
 
     @property
     def aaf(self):
-        """ The allele frequency of the alternate allele.
-           NOTE 1: Punt if more than one alternate allele.
-           NOTE 2: Denominator calc'ed from _called_ genotypes.
+        """ A list of allele frequencies of alternate alleles.
+           NOTE: Denominator calc'ed from _called_ genotypes.
         """
-        # skip if more than one alternate allele. assumes bi-allelic
-        if len(self.ALT) > 1:
-            return None
-        hom_ref = self.num_hom_ref
-        het = self.num_het
-        hom_alt = self.num_hom_alt
-        num_chroms = float(2.0 * self.num_called)
-        return float(het + 2 * hom_alt) / float(num_chroms)
+        num_chroms = 2.0 * self.num_called
+        allele_counts = Counter()
+        for s in self.samples:
+            if s.gt_type is not None:
+                allele_counts.update([s.gt_alleles[0]])
+                allele_counts.update([s.gt_alleles[1]])
+        return [allele_counts[str(i)]/num_chroms for i in range(1, len(self.ALT)+1)]
 
     @property
     def nucl_diversity(self):
@@ -226,10 +244,22 @@ class _Record(object):
         # skip if more than one alternate allele. assumes bi-allelic
         if len(self.ALT) > 1:
             return None
-        p = self.aaf
+        p = self.aaf[0]
         q = 1.0 - p
         num_chroms = float(2.0 * self.num_called)
         return float(num_chroms / (num_chroms - 1.0)) * (2.0 * p * q)
+
+    @property
+    def heterozygosity(self):
+        """
+        Heterozygosity of a site. Heterozygosity gives the probability that
+        two randomly chosen chromosomes from the population have different
+        alleles, giving a measure of the degree of polymorphism in a population.
+
+        If there are i alleles with frequency p_i, H=1-sum_i(p_i^2)
+        """
+        allele_freqs = [1-sum(self.aaf)] + self.aaf
+        return 1 - sum(map(lambda x: x**2, allele_freqs))
 
     def get_hom_refs(self):
         """ The list of hom ref genotypes"""
@@ -250,7 +280,8 @@ class _Record(object):
     @property
     def is_snp(self):
         """ Return whether or not the variant is a SNP """
-        if len(self.REF) > 1: return False
+        if len(self.REF) > 1:
+            return False
         for alt in self.ALT:
             if alt is None or alt.type != "SNV":
                 return False
@@ -263,7 +294,8 @@ class _Record(object):
         """ Return whether or not the variant is an INDEL """
         is_sv = self.is_sv
 
-        if len(self.REF) > 1 and not is_sv: return True
+        if len(self.REF) > 1 and not is_sv:
+            return True
         for alt in self.ALT:
             if alt is None:
                 return True
@@ -290,7 +322,8 @@ class _Record(object):
     def is_transition(self):
         """ Return whether or not the SNP is a transition """
         # if multiple alts, it is unclear if we have a transition
-        if len(self.ALT) > 1: return False
+        if len(self.ALT) > 1:
+            return False
 
         if self.is_snp:
             # just one alt allele
@@ -300,14 +333,17 @@ class _Record(object):
                 (self.REF == "C" and alt_allele == "T") or
                 (self.REF == "T" and alt_allele == "C")):
                 return True
-            else: return False
-        else: return False
+            else:
+                return False
+        else:
+            return False
 
     @property
     def is_deletion(self):
         """ Return whether or not the INDEL is a deletion """
         # if multiple alts, it is unclear if we have a transition
-        if len(self.ALT) > 1: return False
+        if len(self.ALT) > 1:
+            return False
 
         if self.is_indel:
             # just one alt allele
@@ -316,8 +352,10 @@ class _Record(object):
                 return True
             if len(self.REF) > len(alt_allele):
                 return True
-            else: return False
-        else: return False
+            else:
+                return False
+        else:
+            return False
 
     @property
     def var_type(self):
@@ -421,7 +459,7 @@ class _AltRecord(object):
         raise NotImplementedError
 
     def __eq__(self, other):
-        return self.type == other.type
+        return self.type == getattr(other, 'type', None)
 
 
 class _Substitution(_AltRecord):
@@ -447,8 +485,9 @@ class _Substitution(_AltRecord):
     def __eq__(self, other):
         if isinstance(other, basestring):
             return self.sequence == other
-        else:
-            return super(_Substitution, self).__eq__(other) and self.sequence == other.sequence
+        elif not isinstance(other, self.__class__):
+            return False
+        return super(_Substitution, self).__eq__(other) and self.sequence == other.sequence
 
 
 class _Breakend(_AltRecord):
@@ -457,9 +496,15 @@ class _Breakend(_AltRecord):
     def __init__(self, chr, pos, orientation, remoteOrientation, connectingSequence, withinMainAssembly, **kwargs):
         super(_Breakend, self).__init__(type="BND", **kwargs)
         #: The chromosome of breakend's mate.
-        self.chr = str(chr)
+        if chr is not None:
+            self.chr = str(chr)
+        else:
+            self.chr = None  # Single breakend
         #: The coordinate of breakend's mate.
-        self.pos = int(pos)
+        if pos is not None:
+            self.pos = int(pos)
+        else:
+            self.pos = None
         #: The orientation of breakend's mate. If the sequence 3' of the breakend's mate is connected, True, else if the sequence 5' of the breakend's mate is connected, False.
         self.remoteOrientation = remoteOrientation
         #: If the breakend mate is within the assembly, True, else False if the breakend mate is on a contig in an ancillary assembly file.
@@ -491,13 +536,15 @@ class _Breakend(_AltRecord):
             return self.connectingSequence + remoteTag
 
     def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
         return super(_Breakend, self).__eq__(other) \
-                and self.chr == other.chr \
-                and self.pos == other.pos \
-                and self.remoteOrientation == other.remoteOrientation \
-                and self.withinMainAssembly == other.withinMainAssembly \
-                and self.orientation == other.orientation \
-                and self.connectingSequence == other.connectingSequence
+                and self.chr == getattr(other, "chr", None) \
+                and self.pos == getattr(other, "pos", None) \
+                and self.remoteOrientation == getattr(other, "remoteOrientation", None) \
+                and self.withinMainAssembly == getattr(other, "withinMainAssembly", None) \
+                and self.orientation == getattr(other, "orientation", None) \
+                and self.connectingSequence == getattr(other, "connectingSequence", None)
 
 
 class _SingleBreakend(_Breakend):
@@ -533,5 +580,9 @@ def make_calldata_tuple(fields):
             dat = ", ".join(["%s=%s" % (x, y)
                 for (x, y) in zip(self._fields, self)])
             return "CallData(" + dat + ')'
+
+        def __reduce__(self):
+            args = super(CallData, self).__reduce__()
+            return make_calldata_tuple, (fields, )
 
     return CallData
