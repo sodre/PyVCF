@@ -47,7 +47,8 @@ if CYTHON:
 setup(
     name='PyVCF',
     packages=['vcf', 'vcf.test'],
-    scripts=['scripts/vcf_melt', 'scripts/vcf_filter.py'],
+    scripts=['scripts/vcf_melt', 'scripts/vcf_filter.py',
+             'scripts/vcf_sample_filter.py'],
     author='James Casbon and @jdoughertyii',
     author_email='casbon@gmail.com',
     description='Variant Call Format (VCF) parser for Python',

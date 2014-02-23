@@ -5,6 +5,7 @@ import os
 import commands
 import cPickle
 from StringIO import StringIO
+import subprocess
 
 import vcf
 from vcf import utils
@@ -870,6 +871,52 @@ class TestOpenMethods(unittest.TestCase):
         self.assertEqual(self.samples, r.samples)
 
 
+class TestSampleFilter(unittest.TestCase):
+    def testCLIListSamples(self):
+        proc = subprocess.Popen('python scripts/vcf_sample_filter.py vcf/test/example-4.1.vcf', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out, err = proc.communicate()
+        self.assertEqual(proc.returncode, 0)
+        self.assertFalse(err)
+        expected_out = ['Samples:', '0: NA00001', '1: NA00002', '2: NA00003']
+        self.assertEqual(out.splitlines(), expected_out)
+
+    def testCLIWithFilter(self):
+        proc = subprocess.Popen('python scripts/vcf_sample_filter.py vcf/test/example-4.1.vcf -f 1,2 --quiet', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out, err = proc.communicate()
+        self.assertEqual(proc.returncode, 0)
+        self.assertTrue(out)
+        self.assertFalse(err)
+        buf = StringIO()
+        buf.write(out)
+        buf.seek(0)
+        #print(buf.getvalue())
+        reader = vcf.Reader(buf)
+        self.assertEqual(reader.samples, ['NA00001'])
+        rec = reader.next()
+        self.assertEqual(len(rec.samples), 1)
+
+    def testSampleFilterModule(self):
+        # init filter with filename, get list of samples
+        filt = vcf.SampleFilter('vcf/test/example-4.1.vcf')
+        self.assertEqual(filt.samples, ['NA00001', 'NA00002', 'NA00003'])
+        # set filter, check which samples will be kept
+        filtered = filt.set_filters(filters="0", invert=True)
+        self.assertEqual(filtered, ['NA00001'])
+        # write filtered file to StringIO
+        buf = StringIO()
+        filt.write(buf)
+        buf.seek(0)
+        #print(buf.getvalue())
+        # undo monkey patch by destroying instance
+        del filt
+        self.assertTrue('sample_filter' not in dir(vcf.Reader))
+        # read output
+        reader = vcf.Reader(buf)
+        self.assertEqual(reader.samples, ['NA00001'])
+        rec = reader.next()
+        self.assertEqual(len(rec.samples), 1)
+
+
 class TestFilter(unittest.TestCase):
 
 
@@ -1033,6 +1080,7 @@ suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestRecord))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestCall))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestTabix))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestOpenMethods))
+suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestSampleFilter))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestFilter))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestRegression))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestUtils))

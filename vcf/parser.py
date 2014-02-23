@@ -1,10 +1,11 @@
+import codecs
 import collections
-import re
 import csv
 import gzip
-import sys
 import itertools
-import codecs
+import os
+import re
+import sys
 
 try:
     from collections import OrderedDict
@@ -430,7 +431,6 @@ class Reader(object):
         # check whether we already know how to parse this format
         if samp_fmt not in self._format_cache:
             self._format_cache[samp_fmt] = self._parse_sample_format(samp_fmt)
-
         samp_fmt = self._format_cache[samp_fmt]
 
         if cparse:
@@ -601,7 +601,7 @@ class Reader(object):
 
 
 class Writer(object):
-    """ VCF Writer """
+    """VCF Writer. On Windows Python 2, open stream with 'wb'."""
 
     # Reverse keys and values in header field count dictionary
     counts = dict((v,k) for k,v in field_counts.iteritems())
