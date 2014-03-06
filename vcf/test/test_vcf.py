@@ -465,6 +465,8 @@ class TestRecord(unittest.TestCase):
             aaf = var.aaf
             if var.POS == 60034:
                 self.assertEqual([4.0/6.0], aaf)
+            elif var.POS == 60387:
+                self.assertEqual([1.0/3.0], aaf)
 
     def test_pi(self):
         reader = vcf.Reader(fh('example-4.0.vcf'))
