@@ -221,12 +221,13 @@ class _Record(object):
         """ A list of allele frequencies of alternate alleles.
            NOTE: Denominator calc'ed from _called_ genotypes.
         """
-        num_chroms = 2.0 * self.num_called
+        num_chroms = 0.0
         allele_counts = Counter()
         for s in self.samples:
             if s.gt_type is not None:
-                allele_counts.update([s.gt_alleles[0]])
-                allele_counts.update([s.gt_alleles[1]])
+                for a in s.gt_alleles:
+                    allele_counts.update([a])
+                    num_chroms += 1
         return [allele_counts[str(i)]/num_chroms for i in range(1, len(self.ALT)+1)]
 
     @property
