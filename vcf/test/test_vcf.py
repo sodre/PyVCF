@@ -1,11 +1,20 @@
 from __future__ import print_function
 import unittest
+try:
+    unittest.skip
+except AttributeError:
+    import unittest2 as unittest
 import doctest
 import os
 import commands
 import cPickle
 from StringIO import StringIO
 import subprocess
+
+try:
+    import pysam
+except ImportError:
+    pysam = None
 
 import vcf
 from vcf import utils
@@ -814,12 +823,9 @@ class TestTabix(unittest.TestCase):
     def setUp(self):
         self.reader = vcf.Reader(fh('tb.vcf.gz', 'rb'))
 
-        self.run = vcf.parser.pysam is not None
 
-
+    @unittest.skipUnless(pysam, "test requires installation of PySAM.")
     def testFetchRange(self):
-        if not self.run:
-            return
         lines = list(self.reader.fetch('20', 14370, 14370))
         self.assertEquals(len(lines), 1)
         self.assertEqual(lines[0].POS, 14370)
@@ -833,9 +839,9 @@ class TestTabix(unittest.TestCase):
         lines = list(self.reader.fetch('20', 1110695, 1234567))
         self.assertEquals(len(lines), 3)
 
+
+    @unittest.skipUnless(pysam, "test requires installation of PySAM.")
     def testFetchSite(self):
-        if not self.run:
-            return
         site = self.reader.fetch('20', 14370)
         self.assertEqual(site.POS, 14370)
 
@@ -920,9 +926,9 @@ class TestSampleFilter(unittest.TestCase):
 class TestFilter(unittest.TestCase):
 
 
+    @unittest.skip("test currently broken")
     def testApplyFilter(self):
         # FIXME: broken with distribute
-        return
         s, out = commands.getstatusoutput('python scripts/vcf_filter.py --site-quality 30 test/example-4.0.vcf sq')
         #print(out)
         self.assertEqual(s, 0)
@@ -950,9 +956,9 @@ class TestFilter(unittest.TestCase):
         self.assertEqual(n, 2)
 
 
+    @unittest.skip("test currently broken")
     def testApplyMultipleFilters(self):
         # FIXME: broken with distribute
-        return
         s, out = commands.getstatusoutput('python scripts/vcf_filter.py --site-quality 30 '
         '--genotype-quality 50 test/example-4.0.vcf sq mgq')
         self.assertEqual(s, 0)
