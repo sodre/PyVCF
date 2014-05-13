@@ -822,13 +822,13 @@ class TestCall(unittest.TestCase):
                 self.assertEqual([None,1,2], gt_types)
 
 
+@unittest.skipUnless(pysam, "test requires installation of PySAM.")
 class TestTabix(unittest.TestCase):
 
     def setUp(self):
         self.reader = vcf.Reader(fh('tb.vcf.gz', 'rb'))
 
 
-    @unittest.skipUnless(pysam, "test requires installation of PySAM.")
     def testFetchRange(self):
         lines = list(self.reader.fetch('20', 14370, 14370))
         self.assertEquals(len(lines), 1)
@@ -844,7 +844,6 @@ class TestTabix(unittest.TestCase):
         self.assertEquals(len(lines), 3)
 
 
-    @unittest.skipUnless(pysam, "test requires installation of PySAM.")
     def testFetchSite(self):
         site = self.reader.fetch('20', 14370)
         self.assertEqual(site.POS, 14370)
