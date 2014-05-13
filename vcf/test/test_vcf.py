@@ -21,6 +21,7 @@ import vcf
 from vcf import utils
 
 IS_PYTHON2 = sys.version_info[0] == 2
+IS_NOT_PYPY = 'PyPy' not in sys.version
 
 suite = doctest.DocTestSuite(vcf)
 
@@ -906,6 +907,7 @@ class TestSampleFilter(unittest.TestCase):
         rec = reader.next()
         self.assertEqual(len(rec.samples), 1)
 
+    @unittest.skipUnless(IS_NOT_PYPY, "test broken for PyPy")
     def testSampleFilterModule(self):
         # init filter with filename, get list of samples
         filt = vcf.SampleFilter('vcf/test/example-4.1.vcf')
