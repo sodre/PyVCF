@@ -823,35 +823,53 @@ class TestCall(unittest.TestCase):
 
 
 @unittest.skipUnless(pysam, "test requires installation of PySAM.")
-class TestTabix(unittest.TestCase):
+class TestFetch(unittest.TestCase):
 
     def setUp(self):
         self.reader = vcf.Reader(fh('tb.vcf.gz', 'rb'))
 
 
+    def assertFetchedExpectedPositions(
+            self, fetched_variants, expected_positions):
+        fetched_positions = [var.POS for var in fetched_variants]
+        self.assertEqual(fetched_positions, expected_positions)
+
+
+    def testNoVariantsInRange(self):
+        fetched_variants = self.reader.fetch('20', 14370, 17329)
+        self.assertFetchedExpectedPositions(fetched_variants, [])
+
+
+    def testNoVariantsForZeroLengthInterval(self):
+        fetched_variants = self.reader.fetch('20', 14369, 14369)
+        self.assertFetchedExpectedPositions(fetched_variants, [])
+
+
     def testFetchRange(self):
-        lines = list(self.reader.fetch('20', 14370, 14370))
-        self.assertEquals(len(lines), 1)
-        self.assertEqual(lines[0].POS, 14370)
+        fetched_variants = self.reader.fetch('20', 14369, 14370)
+        self.assertFetchedExpectedPositions(fetched_variants, [14370])
 
-        lines = list(self.reader.fetch('20', 14370, 17330))
-        self.assertEquals(len(lines), 2)
-        self.assertEqual(lines[0].POS, 14370)
-        self.assertEqual(lines[1].POS, 17330)
+        fetched_variants = self.reader.fetch('20', 14369, 17330)
+        self.assertFetchedExpectedPositions(
+                fetched_variants, [14370, 17330])
 
-
-        lines = list(self.reader.fetch('20', 1110695, 1234567))
-        self.assertEquals(len(lines), 3)
+        fetched_variants = self.reader.fetch('20', 1110695, 1234567)
+        self.assertFetchedExpectedPositions(
+                fetched_variants, [1110696, 1230237, 1234567])
 
 
-    def testFetchSite(self):
-        site = self.reader.fetch('20', 14370)
-        self.assertEqual(site.POS, 14370)
-
-        site = self.reader.fetch('20', 14369)
-        assert site is None
+    def testFetchesFromStartIfStartOnlySpecified(self):
+        fetched_variants = self.reader.fetch('20', 1110695)
+        self.assertFetchedExpectedPositions(
+                fetched_variants, [1110696, 1230237, 1234567])
 
 
+    def testFetchesAllFromChromIfOnlyChromSpecified(self):
+        fetched_variants = self.reader.fetch('20')
+        self.assertFetchedExpectedPositions(
+                fetched_variants,
+                [14370, 17330, 1110696, 1230237, 1234567]
+        )
 
 
 class TestOpenMethods(unittest.TestCase):
@@ -1090,7 +1108,7 @@ suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestSamplesSpace))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestMixedFiltering))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestRecord))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestCall))
-suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestTabix))
+suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestFetch))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestOpenMethods))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestSampleFilter))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestFilter))

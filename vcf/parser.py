@@ -165,7 +165,7 @@ class _vcf_metadata_parser(object):
                        match.group('type'), match.group('desc'))
 
         return (match.group('id'), form)
-    
+
     def read_contig(self, contig_string):
         '''Read a meta-contigrmation INFO line.'''
         match = self.contig_pattern.match(contig_string)
@@ -321,7 +321,7 @@ class Reader(object):
             elif line.startswith('##FORMAT'):
                 key, val = parser.read_format(line)
                 self.formats[key] = val
-            
+
             elif line.startswith('##contig'):
                 key, val = parser.read_contig(line)
                 self.contigs[key] = val
@@ -569,14 +569,36 @@ class Reader(object):
 
         return record
 
-    def fetch(self, chrom, start, end=None):
-        """ fetch records from a Tabix indexed VCF, requires pysam
-            if start and end are specified, return iterator over positions
-            if end not specified, return individual ``_Call`` at start or None
+    def fetch(self, chrom, start=None, end=None):
+        """ Fetches records from a tabix-indexed VCF file and returns an
+            iterable of ``_Record`` instances
+
+            chrom must be specified.
+
+            The start and end coordinates are in the zero-based,
+            half-open coordinate system, similar to ``_Record.start`` and
+            ``_Record.end``. The very first base of a chromosome is
+            index 0, and the the region includes bases up to, but not
+            including the base at the end coordinate. For example
+            ``fetch('4', 10, 20)`` would include all variants
+            overlapping a 10 base pair region from the 11th base of
+            through the 20th base (which is at index 19) of chromosome
+            4. It would not include the 21st base (at index 20). See
+            http://genomewiki.ucsc.edu/index.php/Coordinate_Transforms
+            for more information on the zero-based, half-open coordinate
+            system.
+
+            If end is omitted, all variants from start until the end of
+            the chromosome chrom will be included.
+
+            If start and end are omitted, all variants on chrom will be
+            returned.
+
+            requires pysam
+
         """
         if not pysam:
             raise Exception('pysam not available, try "pip install pysam"?')
-
         if not self.filename:
             raise Exception('Please provide a filename (or a "normal" fsock)')
 
@@ -585,16 +607,6 @@ class Reader(object):
 
         if self._prepend_chr and chrom[:3] == 'chr':
             chrom = chrom[3:]
-
-        # not sure why tabix needs position -1
-        start = start - 1
-
-        if end is None:
-            self.reader = self._tabix.fetch(chrom, start, start + 1)
-            try:
-                return self.next()
-            except StopIteration:
-                return None
 
         self.reader = self._tabix.fetch(chrom, start, end)
         return self
