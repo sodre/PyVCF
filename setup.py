@@ -1,5 +1,6 @@
 from setuptools import setup
 from distutils.extension import Extension
+import sys
 
 try:
     from Cython.Distutils import build_ext
@@ -7,23 +8,14 @@ try:
 except:
     CYTHON = False
 
-requires = []
+IS_PYTHON26 = sys.version_info[:2] == (2, 6)
 
-# python 2.6 does not have argparse
-try:
-    import argparse
-except ImportError:
-    requires.append('argparse')
+DEPENDENCIES = ['setuptools']
 
-import collections
-try:
-    collections.Counter
-except AttributeError:
-    requires.append('counter')
-try:
-    collections.OrderedDict
-except AttributeError:
-    requires.append('ordereddict')
+if IS_PYTHON26:
+    DEPENDENCIES.extend(['argparse', 'counter', 'ordereddict',
+                         'unittest2'])
+
 
 # get the version without an import
 VERSION = "Undefined"
@@ -53,8 +45,7 @@ setup(
     description='Variant Call Format (VCF) parser for Python',
     long_description=DOC,
     test_suite='vcf.test.test_vcf.suite',
-    install_requires=['distribute'],
-    requires=requires,
+    install_requires=DEPENDENCIES,
     entry_points = {
         'vcf.filters': [
             'site_quality = vcf.filters:SiteQuality',
