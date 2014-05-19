@@ -18,7 +18,7 @@ except ImportError:
     pysam = None
 
 import vcf
-from vcf import utils
+from vcf import model, utils
 
 IS_PYTHON2 = sys.version_info[0] == 2
 IS_NOT_PYPY = 'PyPy' not in sys.version
@@ -763,6 +763,239 @@ class TestRecord(unittest.TestCase):
         reader = vcf.Reader(fh('example-4.0.vcf'))
         for var in reader:
             self.assertEqual(cPickle.loads(cPickle.dumps(var)), var)
+
+
+    def assert_has_expected_coordinates(
+            self,
+            record,
+            expected_coordinates,
+            expected_affected_coordinates
+        ):
+        self.assertEqual(
+                (record.start, record.end),
+                expected_coordinates
+        )
+        self.assertEqual(
+                (record.affected_start, record.affected_end),
+                expected_affected_coordinates
+        )
+
+
+    def test_coordinates_for_snp(self):
+        record = model._Record(
+                '1',
+                10,
+                'id1',
+                'C',
+                [model._Substitution('A')],
+                None,
+                None,
+                {},
+                None,
+                {},
+                None
+        )
+        self.assert_has_expected_coordinates(record, (9, 10), (9, 10))
+
+
+    def test_coordinates_for_insertion(self):
+        record = model._Record(
+                '1',
+                10,
+                'id2',
+                'C',
+                [model._Substitution('CTA')],
+                None,
+                None,
+                {},
+                None,
+                {},
+                None
+        )
+        self.assert_has_expected_coordinates(record, (9, 10), (10, 10))
+
+
+    def test_coordinates_for_deletion(self):
+        record = model._Record(
+                '1',
+                10,
+                'id3',
+                'CTA',
+                [model._Substitution('C')],
+                None,
+                None,
+                {},
+                None,
+                {},
+                None
+        )
+        self.assert_has_expected_coordinates(record, (9, 12), (10, 12))
+
+
+    def test_coordinates_for_None_alt(self):
+        record = model._Record(
+                '1',
+                10,
+                'id4',
+                'C',
+                [None],
+                None,
+                None,
+                {},
+                None,
+                {},
+                None
+        )
+        self.assert_has_expected_coordinates(record, (9, 10), (9, 10))
+
+
+    def test_coordinates_for_multiple_snps(self):
+        record = model._Record(
+                '1',
+                10,
+                'id5',
+                'C',
+                [
+                    model._Substitution('A'),
+                    model._Substitution('G'),
+                    model._Substitution('T')
+                ],
+                None,
+                None,
+                {},
+                None,
+                {},
+                None
+        )
+        self.assert_has_expected_coordinates(record, (9, 10), (9, 10))
+
+
+    def test_coordinates_for_insert_and_snp(self):
+        record = model._Record(
+                '1',
+                10,
+                'id6',
+                'C',
+                [
+                    model._Substitution('GTA'),
+                    model._Substitution('G'),
+                ],
+                None,
+                None,
+                {},
+                None,
+                {},
+                None
+        )
+        self.assert_has_expected_coordinates(record, (9, 10), (9, 10))
+        record = model._Record(
+                '1',
+                10,
+                'id7',
+                'C',
+                [
+                    model._Substitution('G'),
+                    model._Substitution('GTA'),
+                ],
+                None,
+                None,
+                {},
+                None,
+                {},
+                None
+        )
+        self.assert_has_expected_coordinates(record, (9, 10), (9, 10))
+
+
+    def test_coordinates_for_snp_and_deletion(self):
+        record = model._Record(
+                '1',
+                10,
+                'id8',
+                'CTA',
+                [
+                    model._Substitution('C'),
+                    model._Substitution('CTG'),
+                ],
+                None,
+                None,
+                {},
+                None,
+                {},
+                None
+        )
+        self.assert_has_expected_coordinates(record, (9, 12), (10, 12))
+        record = model._Record(
+                '1',
+                10,
+                'id9',
+                'CTA',
+                [
+                    model._Substitution('CTG'),
+                    model._Substitution('C'),
+                ],
+                None,
+                None,
+                {},
+                None,
+                {},
+                None
+        )
+        self.assert_has_expected_coordinates(record, (9, 12), (10, 12))
+
+
+    def test_coordinates_for_insertion_and_deletion(self):
+        record = model._Record(
+                '1',
+                10,
+                'id10',
+                'CT',
+                [
+                    model._Substitution('CA'),
+                    model._Substitution('CTT'),
+                ],
+                None,
+                None,
+                {},
+                None,
+                {},
+                None
+        )
+        self.assert_has_expected_coordinates(record, (9, 11), (10, 11))
+        record = model._Record(
+                '1',
+                10,
+                'id11',
+                'CT',
+                [
+                    model._Substitution('CTT'),
+                    model._Substitution('CA'),
+                ],
+                None,
+                None,
+                {},
+                None,
+                {},
+                None
+        )
+        self.assert_has_expected_coordinates(record, (9, 11), (10, 11))
+
+
+    def test_coordinates_for_breakend(self):
+        record = model._Record(
+                '1',
+                10,
+                'id12',
+                'CTA',
+                [model._Breakend('1', 500, False, True, 'GGTC', True)],
+                None,
+                None,
+                {},
+                None,
+                {},
+                None
+        )
+        self.assert_has_expected_coordinates(record, (9, 12), (9, 12))
 
 
 class TestCall(unittest.TestCase):

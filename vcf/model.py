@@ -125,10 +125,45 @@ class _Record(object):
         INFO and FORMAT are available as properties.
 
         The list of genotype calls is in the ``samples`` property.
+
+        Regarding the coordinates associated with each instance:
+
+        - ``POS``, per VCF specification, is the one-based index
+          (the first base of the contig has an index of 1) of the first
+          base of the ``REF`` sequence.
+        - The ``start`` and ``end`` denote the coordinates of the entire
+          ``REF`` sequence in the zero-based, half-open coordinate
+          system (see
+          http://genomewiki.ucsc.edu/index.php/Coordinate_Transforms),
+          where the first base of the contig has an index of 0, and the
+          interval runs up to, but does not include, the base at the
+          ``end`` index. This indexing scheme is analagous to Python
+          slice notation.
+        - The ``affected_start`` and ``affected_end`` coordinates are
+          also in the zero-based, half-open coordinate system. These
+          coordinates indicate the precise region of the reference
+          genome actually affected by the events denoted in ``ALT``
+          (i.e., the minimum ``affected_start`` and maximum
+          ``affected_end``).
+
+          - For SNPs and structural variants, the affected region
+            includes all bases of ``REF``, including the first base
+            (i.e., ``affected_start = start = POS - 1``).
+          - For deletions, the region includes all bases of ``REF``
+            except the first base, which flanks upstream the actual
+            deletion event, per VCF specification.
+          - For insertions, the ``affected_start`` and ``affected_end``
+            coordinates represent a 0 bp-length region between the two
+            flanking bases (i.e., ``affected_start`` =
+            ``affected_end``). This is analagous to Python slice
+            notation (see http://stackoverflow.com/a/2947881/38140).
+            Neither the upstream nor downstream flanking bases are
+            included in the region.
     """
     def __init__(self, CHROM, POS, ID, REF, ALT, QUAL, FILTER, INFO, FORMAT,
             sample_indexes, samples=None):
         self.CHROM = CHROM
+        #: the one-based coordinate of the first nucleotide in ``REF``
         self.POS = POS
         self.ID = ID
         self.REF = REF
@@ -137,9 +172,9 @@ class _Record(object):
         self.FILTER = FILTER
         self.INFO = INFO
         self.FORMAT = FORMAT
-        #: 0-based start coordinate
+        #: zero-based, half-open start coordinate of ``REF``
         self.start = self.POS - 1
-        #: 1-based end coordinate
+        #: zero-based, half-open end coordinate of ``REF``
         self.end = self.start + len(self.REF)
         #: list of alleles. [0] = REF, [1:] = ALTS
         self.alleles = [self.REF]
@@ -147,6 +182,61 @@ class _Record(object):
         #: list of ``_Calls`` for each sample ordered as in source VCF
         self.samples = samples or []
         self._sample_indexes = sample_indexes
+
+        # Setting affected_start and affected_end here for Sphinx
+        # autodoc purposes...
+        #: zero-based, half-open start coordinate of affected region of reference genome
+        self.affected_start = None
+        #: zero-based, half-open end coordinate of affected region of reference genome (not included in the region)
+        self.affected_end = None
+        self._set_start_and_end()
+
+
+    def _set_start_and_end(self):
+        self.affected_start = self.affected_end = self.POS
+        for alt in self.ALT:
+            if alt is None:
+                start, end = self._compute_coordinates_for_none_alt()
+            elif alt.type == 'SNV':
+                start, end = self._compute_coordinates_for_snp()
+            elif alt.type == 'MNV':
+                start, end = self._compute_coordinates_for_indel()
+            else:
+                start, end = self._compute_coordinates_for_sv()
+            self.affected_start = min(self.affected_start, start)
+            self.affected_end = max(self.affected_end, end)
+
+
+    def _compute_coordinates_for_none_alt(self):
+        start = self.POS - 1
+        end = start + len(self.REF)
+        return (start, end)
+
+
+    def _compute_coordinates_for_snp(self):
+        if len(self.REF) > 1:
+            start = self.POS
+            end = start + (len(self.REF) - 1)
+        else:
+            start = self.POS - 1
+            end = self.POS
+        return (start, end)
+
+
+    def _compute_coordinates_for_indel(self):
+        if len(self.REF) > 1:
+            start = self.POS
+            end = start + (len(self.REF) - 1)
+        else:
+            start = end = self.POS
+        return (start, end)
+
+
+    def _compute_coordinates_for_sv(self):
+        start = self.POS - 1
+        end = start + len(self.REF)
+        return (start, end)
+
 
     # For Python 2
     def __cmp__(self, other):
