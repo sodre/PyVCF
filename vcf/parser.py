@@ -559,6 +559,9 @@ class Reader(object):
             fmt = row[8]
         except IndexError:
             fmt = None
+        else:
+            if fmt == '.':
+                fmt = None
 
         record = _Record(chrom, pos, ID, ref, alt, qual, filt,
                 info, fmt, self._sample_indexes)
