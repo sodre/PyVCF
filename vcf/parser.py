@@ -390,6 +390,7 @@ class Reader(object):
                     vals = entry[1].split(',') # commas are reserved characters indicating multiple values
                     val = self._map(str, vals)
                 except IndexError:
+                    entry_type = 'Flag'
                     val = True
 
             try:

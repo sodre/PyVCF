@@ -262,6 +262,16 @@ class TestGoNL(unittest.TestCase):
         self.assertEqual(reader.contigs['1'].length, 249250621)
 
 
+class TestStringAsFlag(unittest.TestCase):
+
+    def test_string_as_flag(self):
+        """A flag INFO field is declared as string (not allowed by the spec,
+        but seen in practice)."""
+        reader = vcf.Reader(fh('string_as_flag.vcf', 'r'))
+        for _ in reader:
+            pass
+
+
 class TestInfoOrder(unittest.TestCase):
 
     def _assert_order(self, definitions, fields):
@@ -1339,6 +1349,7 @@ suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestBcfToolsOutput))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(Test1kg))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(Test1kgSites))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestGoNL))
+suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestStringAsFlag))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestInfoOrder))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestInfoTypeCharacter))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestGatkOutputWriter))
