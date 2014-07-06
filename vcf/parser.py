@@ -220,9 +220,13 @@ class _vcf_metadata_parser(object):
     def read_meta(self, meta_string):
         if re.match("##.+=<", meta_string):
             return self.read_meta_hash(meta_string)
-        else:
-            match = self.meta_pattern.match(meta_string)
-            return match.group('key'), match.group('val')
+        match = self.meta_pattern.match(meta_string)
+        if not match:
+            # Spec only allows key=value, but we try to be liberal and
+            # interpret anything else as key=none (and all values are parsed
+            # as strings).
+            return meta_string.lstrip('#'), 'none'
+        return match.group('key'), match.group('val')
 
 
 class Reader(object):
