@@ -63,12 +63,13 @@ SINGULAR_METADATA = ['fileformat', 'fileDate', 'reference']
 # Conversion between value in file and Python value
 field_counts = {
     '.': None,  # Unknown number of values
-    'A': -1,  # Equal to the number of alleles in a given record
+    'A': -1,  # Equal to the number of alternate alleles in a given record
     'G': -2,  # Equal to the number of genotypes in a given record
+    'R': -3,  # Equal to the number of alleles including reference in a given record
 }
 
 
-_Info = collections.namedtuple('Info', ['id', 'num', 'type', 'desc'])
+_Info = collections.namedtuple('Info', ['id', 'num', 'type', 'desc', 'source', 'version'])
 _Filter = collections.namedtuple('Filter', ['id', 'desc'])
 _Alt = collections.namedtuple('Alt', ['id', 'desc'])
 _Format = collections.namedtuple('Format', ['id', 'num', 'type', 'desc'])
@@ -82,9 +83,11 @@ class _vcf_metadata_parser(object):
         super(_vcf_metadata_parser, self).__init__()
         self.info_pattern = re.compile(r'''\#\#INFO=<
             ID=(?P<id>[^,]+),
-            Number=(?P<number>-?\d+|\.|[AG]),
+            Number=(?P<number>-?\d+|\.|[AGR]),
             Type=(?P<type>Integer|Float|Flag|Character|String),
             Description="(?P<desc>[^"]*)"
+            (?:,Source="(?P<source>[^"]*)")?
+            (?:,Version="?(?P<version>[^"]*)"?)?
             >''', re.VERBOSE)
         self.filter_pattern = re.compile(r'''\#\#FILTER=<
             ID=(?P<id>[^,]+),
@@ -96,7 +99,7 @@ class _vcf_metadata_parser(object):
             >''', re.VERBOSE)
         self.format_pattern = re.compile(r'''\#\#FORMAT=<
             ID=(?P<id>.+),
-            Number=(?P<number>-?\d+|\.|[AG]),
+            Number=(?P<number>-?\d+|\.|[AGR]),
             Type=(?P<type>.+),
             Description="(?P<desc>.*)"
             >''', re.VERBOSE)
@@ -126,7 +129,8 @@ class _vcf_metadata_parser(object):
         num = self.vcf_field_count(match.group('number'))
 
         info = _Info(match.group('id'), num,
-                     match.group('type'), match.group('desc'))
+                     match.group('type'), match.group('desc'),
+                     match.group('source'), match.group('version'))
 
         return (match.group('id'), info)
 
