@@ -114,6 +114,26 @@ class TestVcfSpecs(unittest.TestCase):
                 print(c)
                 assert c
 
+    def test_vcf_4_2(self):
+        reader = vcf.Reader(fh('example-4.2.vcf'))
+        self.assertEqual(reader.metadata['fileformat'],  'VCFv4.2')
+
+        # If INFO contains no Source and Version keys, they should be None.
+        self.assertEqual(reader.infos['DP'].source, None)
+        self.assertEqual(reader.infos['DP'].version, None)
+
+        # According to spec, INFO Version key is required to be double quoted,
+        # but at least SAMtools 1.0 does not quote it. So we want to be
+        # forgiving here.
+        self.assertEqual(reader.infos['VDB'].source, None)
+        self.assertEqual(reader.infos['VDB'].version, '3')
+
+        # test we can walk the file at least
+        for r in reader:
+            for c in r:
+                assert c
+
+
 class TestGatkOutput(unittest.TestCase):
 
     filename = 'gatk.vcf'
