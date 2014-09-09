@@ -376,7 +376,7 @@ class _Record(object):
         for alt in self.ALT:
             if alt is None or alt.type != "SNV":
                 return False
-            if alt not in ['A', 'C', 'G', 'T']:
+            if alt not in ['A', 'C', 'G', 'T', 'N']:
                 return False
         return True
 

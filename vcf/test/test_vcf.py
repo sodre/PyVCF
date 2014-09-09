@@ -561,6 +561,24 @@ class TestRecord(unittest.TestCase):
             elif var.POS == 1234567:
                 self.assertEqual(False, is_snp)
 
+
+    def test_is_snp_for_n_alt(self):
+        record = model._Record(
+                '1',
+                10,
+                'id1',
+                'C',
+                [model._Substitution('N')],
+                None,
+                None,
+                {},
+                None,
+                {},
+                None
+        )
+        self.assertTrue(record.is_snp)
+
+
     def test_is_indel(self):
         reader = vcf.Reader(fh('example-4.0.vcf'))
         for var in reader:
