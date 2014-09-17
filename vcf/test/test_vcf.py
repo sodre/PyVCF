@@ -1379,6 +1379,67 @@ class TestGATKMeta(unittest.TestCase):
         self.assertEqual(reader.metadata['GATKCommandLine'][1]['CommandLineOptions'], '"analysis_type=VariantAnnotator annotation=[HomopolymerRun, VariantType, TandemRepeatAnnotator]"')
 
 
+
+class TestUncalledGenotypes(unittest.TestCase):
+    """Test the handling of uncalled (., ./.) sample genotypes."""
+
+    def test_read_uncalled(self):
+        """Test that uncalled genotypes are properly read into
+        gt_nums, gt_bases, ploidity, and gt_alleles properties
+        of _Call objects.  For uncalled _Call objects:
+
+        - gt_nums should be None
+        - gt_bases should be None
+        - ploidity should match the input ploidity
+        - gt_alleles should be a list of None's with length
+          matching the ploidity"""
+
+        reader = vcf.Reader(fh('uncalled_genotypes.vcf'))
+        for var in reader:
+            gt_bases = [s.gt_bases for s in var.samples]
+            gt_nums = [s.gt_nums for s in var.samples]
+            ploidity = [s.ploidity for s in var.samples]
+            gt_alleles = [s.gt_alleles for s in var.samples]
+
+            if var.POS == 14370:
+                self.assertEqual(['0|0', None, '1/1'], gt_nums)
+                self.assertEqual(['G|G', None, 'A/A'], gt_bases)
+                self.assertEqual([2,2,2], ploidity)
+                self.assertEqual([['0','0'], [None,None], ['1','1']], gt_alleles)
+            elif var.POS == 17330:
+                self.assertEqual([None, '0|1', '0/0'], gt_nums)
+                self.assertEqual([None, 'T|A', 'T/T'], gt_bases)
+                self.assertEqual([3,2,2], ploidity)
+                self.assertEqual([[None,None,None], ['0','1'], ['0','0']], gt_alleles)
+            elif var.POS == 1234567:
+                self.assertEqual(['0/1', '0/2', None], gt_nums)
+                self.assertEqual(['GTC/G', 'GTC/GTCT', None], gt_bases)
+                self.assertEqual([2,2,1], ploidity)
+                self.assertEqual([['0','1'], ['0','2'], [None]], gt_alleles)
+
+
+    def test_write_uncalled(self):
+        """Test that uncalled genotypes are written just as
+        they were read in the input file."""
+
+        reader = vcf.Reader(fh('uncalled_genotypes.vcf'))
+
+        # Write all reader records to a stream.
+        out = StringIO()
+        writer = vcf.Writer(out, reader, lineterminator='\n')
+        for record in reader:
+            writer.write_record(record)
+
+
+        # Compare the written stream to the input reader line-by-line.
+        out.seek(0)
+        out_lines = out.getvalue().split('\n')
+        in_lines = [l.rstrip('\n') for l in fh('uncalled_genotypes.vcf')]
+        for (in_line, out_line) in zip(in_lines, out_lines):
+            self.assertEqual(in_line,out_line)
+
+
+
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestVcfSpecs))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestGatkOutput))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestFreebayesOutput))
@@ -1404,3 +1465,4 @@ suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestFilter))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestRegression))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestUtils))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestGATKMeta))
+suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestUncalledGenotypes))
