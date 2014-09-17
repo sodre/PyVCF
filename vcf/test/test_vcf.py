@@ -1416,6 +1416,7 @@ class TestUncalledGenotypes(unittest.TestCase):
                 self.assertEqual(['GTC/G', 'GTC/GTCT', None], gt_bases)
                 self.assertEqual([2,2,1], ploidity)
                 self.assertEqual([['0','1'], ['0','2'], [None]], gt_alleles)
+        reader._reader.close()
 
 
     def test_write_uncalled(self):
@@ -1429,12 +1430,15 @@ class TestUncalledGenotypes(unittest.TestCase):
         writer = vcf.Writer(out, reader, lineterminator='\n')
         for record in reader:
             writer.write_record(record)
+        reader._reader.close()
 
 
         # Compare the written stream to the input reader line-by-line.
         out.seek(0)
         out_lines = out.getvalue().split('\n')
-        in_lines = [l.rstrip('\n') for l in fh('uncalled_genotypes.vcf')]
+        in_file = fh('uncalled_genotypes.vcf')
+        in_lines = [l.rstrip('\n') for l in in_file]
+        in_file.close()
         for (in_line, out_line) in zip(in_lines, out_lines):
             self.assertEqual(in_line,out_line)
 
