@@ -36,7 +36,10 @@ def parse_samples(
             vals = sampvals[j]
 
             # short circuit the most common
-            if vals == '.' or vals == './.':
+            if samp_fmt._fields[j] == 'GT':
+                sampdat[j] = vals
+                continue
+            elif vals == '.':
                 sampdat[j] = None
                 continue
 

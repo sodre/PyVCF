@@ -1,17 +1,19 @@
 from abc import ABCMeta, abstractmethod
 import collections
 import sys
+import re
 
 try:
     from collections import Counter
 except ImportError:
     from counter import Counter
 
+allele_delimiter = re.compile(r'''[|/]''') # to split a genotype into alleles
 
 class _Call(object):
     """ A genotype call, a cell entry in a VCF file"""
 
-    __slots__ = ['site', 'sample', 'data', 'gt_nums', 'called']
+    __slots__ = ['site', 'sample', 'data', 'gt_nums', 'gt_alleles', 'called', 'ploidity']
 
     def __init__(self, site, sample, data):
         #: The ``_Record`` for this ``_Call``
@@ -20,14 +22,18 @@ class _Call(object):
         self.sample = sample
         #: Dictionary of data from the VCF file
         self.data = data
-        try:
-            self.gt_nums = self.data.GT
-            #: True if the GT is not ./.
-            self.called = self.gt_nums is not None
-        except AttributeError:
-            self.gt_nums = None
+
+        if hasattr(self.data, 'GT'):
+            self.gt_alleles = [(al if al != '.' else None) for al in allele_delimiter.split(self.data.GT)]
+            self.ploidity = len(self.gt_alleles)
+            self.called = all([al != None for al in self.gt_alleles])
+            self.gt_nums = self.data.GT if self.called else None
+        else:
             #62 a call without a genotype is not defined as called or not
+            self.gt_alleles = None
+            self.ploidity = None
             self.called = None
+            self.gt_nums = None
 
     def __repr__(self):
         return "Call(sample=%s, %s)" % (self.sample, str(self.data))
@@ -49,12 +55,6 @@ class _Call(object):
 
     def gt_phase_char(self):
         return "/" if not self.phased else "|"
-
-    @property
-    def gt_alleles(self):
-        '''The numbers of the alleles called at a given sample'''
-        # grab the numeric alleles of the gt string; tokenize by phasing
-        return self.gt_nums.split(self.gt_phase_char())
 
     @property
     def gt_bases(self):

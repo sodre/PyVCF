@@ -459,7 +459,10 @@ class Reader(object):
             for i, vals in enumerate(sample.split(':')):
 
                 # short circuit the most common
-                if vals == '.' or vals == './.':
+                if samp_fmt._fields[i] == 'GT':
+                    sampdat[i] = vals
+                    continue
+                elif vals == ".":
                     sampdat[i] = None
                     continue
 
