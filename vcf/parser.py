@@ -459,7 +459,10 @@ class Reader(object):
             for i, vals in enumerate(sample.split(':')):
 
                 # short circuit the most common
-                if vals == '.' or vals == './.':
+                if samp_fmt._fields[i] == 'GT':
+                    sampdat[i] = vals
+                    continue
+                elif vals == ".":
                     sampdat[i] = None
                     continue
 
@@ -723,28 +726,14 @@ class Writer(object):
                         sorted(info, key=order_key))
 
     def _format_sample(self, fmt, sample):
-        try:
-            # Try to get the GT value first.
-            gt = getattr(sample.data, 'GT')
-            # PyVCF stores './.' GT values as None, so we need to revert it back
-            # to './.' when writing.
-            if gt is None:
-                gt = './.'
-        except AttributeError:
-            # Failing that, try to check whether 'GT' is specified in the FORMAT
-            # field. If yes, use the recommended empty value ('./.')
-            if 'GT' in fmt:
-                gt = './.'
-            # Otherwise use an empty string as the value
-            else:
-                gt = ''
-        # If gt is an empty string (i.e. not stored), write all other data
+        if hasattr(sample.data, 'GT'):
+            gt = sample.data.GT
+        else:
+            gt = './.' if 'GT' in fmt else ''
+
         if not gt:
             return ':'.join([self._stringify(x) for x in sample.data])
-        # Otherwise use the GT values from above and combine it with the rest of
-        # the data.
-        # Note that this follows the VCF spec, where GT is always the first
-        # item whenever it is present.
+        # Following the VCF spec, GT is always the first item whenever it is present.
         else:
             return ':'.join([gt] + [self._stringify(x) for x in sample.data[1:]])
 
