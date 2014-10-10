@@ -367,7 +367,7 @@ class Reader(object):
         retdict = {}
 
         for entry in entries:
-            entry = entry.split('=')
+            entry = entry.split('=', 1)
             ID = entry[0]
             try:
                 entry_type = self.infos[ID].type
