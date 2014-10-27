@@ -634,7 +634,9 @@ class Writer(object):
     counts = dict((v,k) for k,v in field_counts.iteritems())
 
     def __init__(self, stream, template, lineterminator="\n"):
-        self.writer = csv.writer(stream, delimiter="\t", lineterminator=lineterminator)
+        self.writer = csv.writer(stream, delimiter="\t",
+                                 lineterminator=lineterminator,
+                                 quotechar='', quoting=csv.QUOTE_NONE)
         self.template = template
         self.stream = stream
 
