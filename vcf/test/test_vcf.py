@@ -133,6 +133,17 @@ class TestVcfSpecs(unittest.TestCase):
             for c in r:
                 assert c
 
+    def test_contig_idonly(self):
+        """Test VCF inputs with ##contig inputs containing only IDs. produced by bcftools 1.2+
+        """
+        reader = vcf.Reader(fh("contig_idonly.vcf"))
+        for cid, contig in reader.contigs.items():
+            if cid == "1":
+                assert contig.length is None
+            elif cid == "2":
+                assert contig.length == 2000
+            elif cid == "3":
+                assert contig.length == 3000
 
 class TestGatkOutput(unittest.TestCase):
 
