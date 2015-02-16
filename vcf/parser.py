@@ -104,16 +104,17 @@ class _vcf_metadata_parser(object):
             Description="(?P<desc>.*)"
             >''', re.VERBOSE)
         self.contig_pattern = re.compile(r'''\#\#contig=<
-            ID=(?P<id>[^,]+),
-            .*
-            length=(?P<length>-?\d+)
+            ID=(?P<id>[^>,]+)
+            (,.*length=(?P<length>-?\d+))?
             .*
             >''', re.VERBOSE)
         self.meta_pattern = re.compile(r'''##(?P<key>.+?)=(?P<val>.+)''')
 
     def vcf_field_count(self, num_str):
         """Cast vcf header numbers to integer or None"""
-        if num_str not in field_counts:
+        if num_str is None:
+            return None
+        elif num_str not in field_counts:
             # Fixed, specified number
             return int(num_str)
         else:
@@ -176,13 +177,9 @@ class _vcf_metadata_parser(object):
         if not match:
             raise SyntaxError(
                 "One of the contig lines is malformed: %s" % contig_string)
-
         length = self.vcf_field_count(match.group('length'))
-
         contig = _Contig(match.group('id'), length)
-
         return (match.group('id'), contig)
-
 
     def read_meta_hash(self, meta_string):
         items = re.split("[<>]", meta_string)
@@ -668,7 +665,10 @@ class Writer(object):
         for line in template.alts.itervalues():
             stream.write(two.format(key="ALT", *line))
         for line in template.contigs.itervalues():
-            stream.write('##contig=<ID={0},length={1}>\n'.format(*line))
+            if line.length:
+                stream.write('##contig=<ID={0},length={1}>\n'.format(*line))
+            else:
+                stream.write('##contig=<ID={0}>\n'.format(*line))
 
         self._write_header()
 
