@@ -82,25 +82,25 @@ class _vcf_metadata_parser(object):
     def __init__(self):
         super(_vcf_metadata_parser, self).__init__()
         self.info_pattern = re.compile(r'''\#\#INFO=<
-            ID=(?P<id>[^,]+),
-            Number=(?P<number>-?\d+|\.|[AGR]),
-            Type=(?P<type>Integer|Float|Flag|Character|String),
+            ID=(?P<id>[^,]+),\s*
+            Number=(?P<number>-?\d+|\.|[AGR]),\s*
+            Type=(?P<type>Integer|Float|Flag|Character|String),\s*
             Description="(?P<desc>[^"]*)"
-            (?:,Source="(?P<source>[^"]*)")?
-            (?:,Version="?(?P<version>[^"]*)"?)?
+            (?:,\s*Source="(?P<source>[^"]*)")?
+            (?:,\s*Version="?(?P<version>[^"]*)"?)?
             >''', re.VERBOSE)
         self.filter_pattern = re.compile(r'''\#\#FILTER=<
-            ID=(?P<id>[^,]+),
+            ID=(?P<id>[^,]+),\s*
             Description="(?P<desc>[^"]*)"
             >''', re.VERBOSE)
         self.alt_pattern = re.compile(r'''\#\#ALT=<
-            ID=(?P<id>[^,]+),
+            ID=(?P<id>[^,]+),\s*
             Description="(?P<desc>[^"]*)"
             >''', re.VERBOSE)
         self.format_pattern = re.compile(r'''\#\#FORMAT=<
-            ID=(?P<id>.+),
-            Number=(?P<number>-?\d+|\.|[AGR]),
-            Type=(?P<type>.+),
+            ID=(?P<id>.+),\s*
+            Number=(?P<number>-?\d+|\.|[AGR]),\s*
+            Type=(?P<type>.+),\s*
             Description="(?P<desc>.*)"
             >''', re.VERBOSE)
         self.contig_pattern = re.compile(r'''\#\#contig=<

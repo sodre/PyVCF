@@ -457,6 +457,27 @@ class TestSamplesSpace(unittest.TestCase):
         self.assertEqual(self.reader.samples, self.samples)
 
 
+class TestMetadataWhitespace(unittest.TestCase):
+    filename = 'metadata-whitespace.vcf'
+    def test_metadata_whitespace(self):
+        """
+        Test parsing metadata header lines with whitespace.
+        """
+        self.reader = vcf.Reader(fh(self.filename))
+
+        # Pick one INFO line and assert that we parsed it correctly.
+        info_indel = self.reader.infos['INDEL']
+        assert info_indel.id == 'INDEL'
+        assert info_indel.num == 0
+        assert info_indel.type == 'Flag'
+        assert info_indel.desc == 'Indicates that the variant is an INDEL.'
+
+        # Test we can walk the file at least.
+        for r in self.reader:
+            for c in r:
+                pass
+
+
 class TestMixedFiltering(unittest.TestCase):
     filename = 'mixed-filtering.vcf'
     def test_mixed_filtering(self):
@@ -1470,6 +1491,7 @@ suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestGatkOutputWriter)
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestBcfToolsOutputWriter))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestWriterDictionaryMeta))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestSamplesSpace))
+suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestMetadataWhitespace))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestMixedFiltering))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestRecord))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestCall))
