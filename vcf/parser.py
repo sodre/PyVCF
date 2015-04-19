@@ -233,7 +233,7 @@ class _vcf_metadata_parser(object):
 class Reader(object):
     """ Reader for a VCF v 4.0 file, an iterator returning ``_Record objects`` """
 
-    def __init__(self, fsock=None, filename=None, compressed=False, prepend_chr=False,
+    def __init__(self, fsock=None, filename=None, compressed=None, prepend_chr=False,
                  strict_whitespace=False):
         """ Create a new Reader for a VCF file.
 
@@ -256,9 +256,11 @@ class Reader(object):
             self._reader = fsock
             if filename is None and hasattr(fsock, 'name'):
                 filename = fsock.name
-                compressed = compressed or filename.endswith('.gz')
+                if compressed is None:
+                    compressed = filename.endswith('.gz')
         elif filename:
-            compressed = compressed or filename.endswith('.gz')
+            if compressed is None:
+                compressed = filename.endswith('.gz')
             self._reader = open(filename, 'rb' if compressed else 'rt')
         self.filename = filename
         if compressed:
