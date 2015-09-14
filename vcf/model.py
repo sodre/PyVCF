@@ -20,7 +20,7 @@ class _Call(object):
         self.site = site
         #: The sample name
         self.sample = sample
-        #: Dictionary of data from the VCF file
+        #: Namedtuple of data from the VCF file
         self.data = data
 
         if hasattr(self.data, 'GT'):
