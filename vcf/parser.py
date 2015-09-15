@@ -234,7 +234,7 @@ class Reader(object):
     """ Reader for a VCF v 4.0 file, an iterator returning ``_Record objects`` """
 
     def __init__(self, fsock=None, filename=None, compressed=None, prepend_chr=False,
-                 strict_whitespace=False):
+                 strict_whitespace=False, encoding='ascii'):
         """ Create a new Reader for a VCF file.
 
             You must specify either fsock (stream) or filename.  Gzipped streams
@@ -266,7 +266,7 @@ class Reader(object):
         if compressed:
             self._reader = gzip.GzipFile(fileobj=self._reader)
             if sys.version > '3':
-                self._reader = codecs.getreader('ascii')(self._reader)
+                self._reader = codecs.getreader(encoding)(self._reader)
 
         if strict_whitespace:
             self._separator = '\t'
@@ -295,6 +295,7 @@ class Reader(object):
         self._prepend_chr = prepend_chr
         self._parse_metainfo()
         self._format_cache = {}
+        self.encoding = encoding
 
     def __iter__(self):
         return self
@@ -617,7 +618,8 @@ class Reader(object):
             raise Exception('Please provide a filename (or a "normal" fsock)')
 
         if not self._tabix:
-            self._tabix = pysam.Tabixfile(self.filename)
+            self._tabix = pysam.Tabixfile(self.filename,
+                                          encoding=self.encoding)
 
         if self._prepend_chr and chrom[:3] == 'chr':
             chrom = chrom[3:]
