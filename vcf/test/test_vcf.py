@@ -1192,6 +1192,25 @@ class TestFetch(unittest.TestCase):
         )
 
 
+@unittest.skipUnless(pysam, "test requires installation of PySAM.")
+class TestIssue201(unittest.TestCase):
+    def setUp(self):
+        # This file contains some non-ASCII characters in a UTF-8 encoding.
+        # https://github.com/jamescasbon/PyVCF/issues/201
+        self.reader = vcf.Reader(fh('issue-201.vcf.gz', 'rb'),
+                                 encoding='utf-8')
+
+    def testIterate(self):
+        for record in self.reader:
+            # Should not raise decoding errors.
+            pass
+
+    def testFetch(self):
+        for record in self.reader.fetch(chrom='17'):
+            # Should not raise decoding errors.
+            pass
+
+
 class TestOpenMethods(unittest.TestCase):
 
     samples = 'NA00001 NA00002 NA00003'.split()
@@ -1496,6 +1515,7 @@ suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestMixedFiltering))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestRecord))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestCall))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestFetch))
+suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue201))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestOpenMethods))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestSampleFilter))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestFilter))
