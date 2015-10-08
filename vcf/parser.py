@@ -182,15 +182,16 @@ class _vcf_metadata_parser(object):
         return (match.group('id'), contig)
 
     def read_meta_hash(self, meta_string):
-        items = re.split("[<>]", meta_string)
-        # Removing initial hash marks and final equal sign
-        key = items[0][2:-1]
+        # assert re.match("##.+=<", meta_string)
+        items = meta_string.split('=', 1)
+        # Removing initial hash marks
+        key = items[0].lstrip('#')
         # N.B., items can have quoted values, so cannot just split on comma
         val = OrderedDict()
         state = 0
         k = ''
         v = ''
-        for c in items[1]:
+        for c in items[1].strip('[<>]'):
 
             if state == 0:  # reading item key
                 if c == '=':

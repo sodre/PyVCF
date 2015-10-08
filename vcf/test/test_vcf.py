@@ -365,6 +365,38 @@ class TestInfoTypeCharacter(unittest.TestCase):
             self.assertEquals(l.INFO, r.INFO)
 
 
+class TestParseMetaLine(unittest.TestCase):
+    def test_parse(self):
+        reader = vcf.Reader(fh('parse-meta-line.vcf'))
+        f = reader.metadata['MYFIELD'][0]
+        self.assertEqual(f['ID'], 'SomeField')
+        self.assertEqual(f['Version'], '3.4-0-g7e26428')
+        self.assertEqual(f['Date'], '"Wed Oct 07 09:11:47 CEST 2015"')
+        self.assertEqual(f['Options'], '"< 4 and > 3"')
+        next(reader)
+
+    def test_write(self):
+        reader = vcf.Reader(fh('parse-meta-line.vcf'))
+        out = StringIO()
+        writer = vcf.Writer(out, reader)
+
+        records = list(reader)
+
+        for record in records:
+            writer.write_record(record)
+        out.seek(0)
+        reader2 = vcf.Reader(out)
+
+        f = reader2.metadata['MYFIELD'][0]
+        self.assertEqual(f['ID'], 'SomeField')
+        self.assertEqual(f['Version'], '3.4-0-g7e26428')
+        self.assertEqual(f['Date'], '"Wed Oct 07 09:11:47 CEST 2015"')
+        self.assertEqual(f['Options'], '"< 4 and > 3"')
+
+        for l, r in zip(records, reader2):
+            self.assertEquals(l.INFO, r.INFO)
+
+
 class TestGatkOutputWriter(unittest.TestCase):
 
     def testWrite(self):
@@ -1506,6 +1538,7 @@ suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestGoNL))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestStringAsFlag))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestInfoOrder))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestInfoTypeCharacter))
+suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestParseMetaLine))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestGatkOutputWriter))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestBcfToolsOutputWriter))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestWriterDictionaryMeta))
