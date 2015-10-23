@@ -273,6 +273,9 @@ class Reader(object):
             self._separator = '\t'
         else:
             self._separator = '\t| +'
+            
+        self._row_pattern = re.compile(self._separator)
+        self._alt_pattern = re.compile('[\[\]]')
 
         self.reader = (line.strip() for line in self._reader if line.strip())
 
@@ -507,9 +510,9 @@ class Reader(object):
         return samp_data
 
     def _parse_alt(self, str):
-        if re.search('[\[\]]', str) is not None:
+        if self._alt_pattern.search(str) is not None:
             # Paired breakend
-            items = re.split('[\[\]]', str)
+            items = self._alt_pattern.split(str)
             remoteCoords = items[1].split(':')
             chr = remoteCoords[0]
             if chr[0] == '<':
@@ -537,7 +540,7 @@ class Reader(object):
     def next(self):
         '''Return the next record in the file.'''
         line = self.reader.next()
-        row = re.split(self._separator, line.rstrip())
+        row = self._row_pattern.split(line.rstrip())
         chrom = row[0]
         if self._prepend_chr:
             chrom = 'chr' + chrom
