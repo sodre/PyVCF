@@ -229,7 +229,35 @@ class TestBcfToolsOutput(unittest.TestCase):
             for s in r.samples:
                 s.phased
 
+class TestIssue214(unittest.TestCase):
+    """ See https://github.com/jamescasbon/PyVCF/issues/214 """
+    
+    def test_issue_214_is_snp(self):
+        reader=vcf.Reader(fh('issue-214.vcf'))
+        r=reader.next()
+        self.assertTrue(r.is_snp)
 
+    def test_issue_214_var_type(self):
+        reader=vcf.Reader(fh('issue-214.vcf'))
+        r=reader.next()
+        self.assertEqual(r.var_type,'snp')
+
+    # Can the ref even be a spanning deletion?
+    # Note, this does not trigger issue 214, but I've added it here for completeness
+    def test_issue_214_ref_is_del_is_snp(self):
+        reader=vcf.Reader(fh('issue-214.vcf'))
+        reader.next()
+        r=reader.next()
+        self.assertTrue(r.is_snp)
+
+    # Can the ref even be a spanning deletion?
+    # Note, this does not trigger issue 214, but I've added it here for completeness
+    def test_issue_214_ref_is_del_var_type(self):
+        reader=vcf.Reader(fh('issue-214.vcf'))
+        reader.next()
+        r=reader.next()
+        self.assertEqual(r.var_type,'snp')
+        
 class Test1kg(unittest.TestCase):
 
     def testParse(self):
@@ -1532,6 +1560,7 @@ suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestGatkOutput))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestFreebayesOutput))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestSamtoolsOutput))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestBcfToolsOutput))
+suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue214))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(Test1kg))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(Test1kgSites))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestGoNL))
