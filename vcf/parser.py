@@ -349,7 +349,7 @@ class Reader(object):
 
             line = self.reader.next()
 
-        fields = re.split(self._separator, line[1:])
+        fields = self._row_pattern.split(line[1:])
         self._column_headers = fields[:9]
         self.samples = fields[9:]
         self._sample_indexes = dict([(x,i) for (i,x) in enumerate(self.samples)])
