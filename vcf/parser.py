@@ -273,7 +273,7 @@ class Reader(object):
             self._separator = '\t'
         else:
             self._separator = '\t| +'
-            
+
         self._row_pattern = re.compile(self._separator)
         self._alt_pattern = re.compile('[\[\]]')
 
@@ -466,7 +466,7 @@ class Reader(object):
                 if samp_fmt._fields[i] == 'GT':
                     sampdat[i] = vals
                     continue
-                elif vals == ".":
+                elif not vals or vals == ".":
                     sampdat[i] = None
                     continue
 

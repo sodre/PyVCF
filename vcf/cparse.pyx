@@ -39,7 +39,7 @@ def parse_samples(
             if samp_fmt._fields[j] == 'GT':
                 sampdat[j] = vals
                 continue
-            elif vals == '.':
+            elif not vals or vals == '.':
                 sampdat[j] = None
                 continue
 
