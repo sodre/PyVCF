@@ -231,7 +231,7 @@ class TestBcfToolsOutput(unittest.TestCase):
 
 class TestIssue214(unittest.TestCase):
     """ See https://github.com/jamescasbon/PyVCF/issues/214 """
-    
+
     def test_issue_214_is_snp(self):
         reader=vcf.Reader(fh('issue-214.vcf'))
         r=reader.next()
@@ -257,7 +257,7 @@ class TestIssue214(unittest.TestCase):
         reader.next()
         r=reader.next()
         self.assertEqual(r.var_type,'snp')
-        
+
 class Test1kg(unittest.TestCase):
 
     def testParse(self):
@@ -1553,6 +1553,12 @@ class TestUncalledGenotypes(unittest.TestCase):
         for (in_line, out_line) in zip(in_lines, out_lines):
             self.assertEqual(in_line,out_line)
 
+class TestStrelka(unittest.TestCase):
+
+    def test_strelka(self):
+        reader = vcf.Reader(fh('strelka.vcf'))
+        n = reader.next()
+        assert n is not None
 
 
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestVcfSpecs))
@@ -1585,3 +1591,4 @@ suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestRegression))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestUtils))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestGATKMeta))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestUncalledGenotypes))
+suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestStrelka))
