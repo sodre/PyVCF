@@ -50,7 +50,7 @@ of key=value pairs are converted to Python dictionaries, with flags being given
 a ``True`` value. Integers and floats are handled exactly as you'd expect::
 
     >>> vcf_reader = vcf.Reader(open('vcf/test/example-4.0.vcf', 'r'))
-    >>> record = vcf_reader.next()
+    >>> record = next(vcf_reader)
     >>> print record.POS
     14370
     >>> print record.ALT
@@ -82,7 +82,7 @@ fields.  In case the FORMAT column does not exist, ``record.FORMAT`` is
 parsed sample column and ``record.genotype`` is a way of looking up genotypes
 by sample name::
 
-    >>> record = vcf_reader.next()
+    >>> record = next(vcf_reader)
     >>> for sample in record.samples:
     ...     print sample['GT']
     0|0
@@ -135,15 +135,14 @@ For example::
 ALT records are actually classes, so that you can interrogate them::
 
     >>> reader = vcf.Reader(open('vcf/test/example-4.1-bnd.vcf'))
-    >>> _ = reader.next(); row = reader.next()
+    >>> _ = next(reader); row = next(reader)
     >>> print row
     Record(CHROM=1, POS=2, REF=T, ALT=[T[2:3[])
     >>> bnd = row.ALT[0]
     >>> print bnd.withinMainAssembly, bnd.orientation, bnd.remoteOrientation, bnd.connectingSequence
     True False True T
 
-Random access is supported for files with tabix indexes.  Simply call fetch for the
-region you are interested in::
+Random access is supported for files with tabix indexes. This requires the pysam module as a dependency.  Simply call fetch for the region you are interested in::
 
     >>> vcf_reader = vcf.Reader(filename='vcf/test/tb.vcf.gz')
     >>> for record in vcf_reader.fetch('20', 1110696, 1230237):  # doctest: +SKIP
