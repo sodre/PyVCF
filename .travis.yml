@@ -6,8 +6,11 @@ python:
   - "3.2"
   - "3.3"
   - "3.4"
+  - "3.5"
+  - "nightly"
   - "pypy"
+  - "pypy3"
 install:
-  - "if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install -r requirements/python2.6-requirements.txt; elif [[ $TRAVIS_PYTHON_VERSION == 'pypy' ]]; then pip install -r requirements/pypy-requirements.txt; else pip install -r requirements/common-requirements.txt; fi"
+  - "if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install -r requirements/python2.6-requirements.txt; elif [[ $TRAVIS_PYTHON_VERSION == 'pypy' ]] || [[ $TRAVIS_PYTHON_VERSION == 'pypy3' ]]; then pip install -r requirements/pypy-requirements.txt; else pip install -r requirements/common-requirements.txt; fi"
   - python setup.py install
 script: python setup.py test
