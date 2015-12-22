@@ -234,12 +234,12 @@ class TestIssue214(unittest.TestCase):
 
     def test_issue_214_is_snp(self):
         reader=vcf.Reader(fh('issue-214.vcf'))
-        r=reader.next()
+        r=next(reader)
         self.assertTrue(r.is_snp)
 
     def test_issue_214_var_type(self):
         reader=vcf.Reader(fh('issue-214.vcf'))
-        r=reader.next()
+        r=next(reader)
         self.assertEqual(r.var_type,'snp')
 
     # Can the ref even be a spanning deletion?
