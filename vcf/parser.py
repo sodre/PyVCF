@@ -314,7 +314,7 @@ class Reader(object):
 
         parser = _vcf_metadata_parser()
 
-        line = self.reader.next()
+        line = next(self.reader)
         while line.startswith('##'):
             self._header_lines.append(line)
 
