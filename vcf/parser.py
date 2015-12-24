@@ -347,7 +347,7 @@ class Reader(object):
                         self.metadata[key] = []
                     self.metadata[key].append(val)
 
-            line = self.reader.next()
+            line = next(self.reader)
 
         fields = self._row_pattern.split(line[1:])
         self._column_headers = fields[:9]
@@ -539,7 +539,7 @@ class Reader(object):
 
     def next(self):
         '''Return the next record in the file.'''
-        line = self.reader.next()
+        line = next(self.reader)
         row = self._row_pattern.split(line.rstrip())
         chrom = row[0]
         if self._prepend_chr:
