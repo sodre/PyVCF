@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+"""
+A VCFv4.0 and 4.1 parser for Python.
+
+Online version of PyVCF documentation is available at http://pyvcf.rtfd.org/
+"""
+
 
 from vcf.parser import Reader, Writer
 from vcf.parser import VCFReader, VCFWriter
