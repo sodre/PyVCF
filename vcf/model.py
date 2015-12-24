@@ -330,7 +330,7 @@ class _Record(object):
 
         Derived from:
         \"Population Genetics: A Concise Guide, 2nd ed., p.45\"
-          John Gillespie.
+        John Gillespie.
         """
         # skip if more than one alternate allele. assumes bi-allelic
         if len(self.ALT) > 1:
@@ -467,13 +467,14 @@ class _Record(object):
     def var_subtype(self):
         """
         Return the subtype of variant.
+
         - For SNPs and INDELs, yeild one of: [ts, tv, ins, del]
-        - For SVs yield either "complex" or the SV type defined
-          in the ALT fields (removing the brackets).
-          E.g.:
-               <DEL>       -> DEL
-               <INS:ME:L1> -> INS:ME:L1
-               <DUP>       -> DUP
+        - For SVs yield either "complex" or the SV type defined in the ALT
+          fields (removing the brackets). E.g.::
+
+              <DEL>       -> DEL
+              <INS:ME:L1> -> INS:ME:L1
+              <DUP>       -> DUP
 
         The logic is meant to follow the rules outlined in the following
         paragraph at:

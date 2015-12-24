@@ -234,28 +234,28 @@ class TestIssue214(unittest.TestCase):
 
     def test_issue_214_is_snp(self):
         reader=vcf.Reader(fh('issue-214.vcf'))
-        r=reader.next()
+        r=next(reader)
         self.assertTrue(r.is_snp)
 
     def test_issue_214_var_type(self):
         reader=vcf.Reader(fh('issue-214.vcf'))
-        r=reader.next()
+        r=next(reader)
         self.assertEqual(r.var_type,'snp')
 
     # Can the ref even be a spanning deletion?
     # Note, this does not trigger issue 214, but I've added it here for completeness
     def test_issue_214_ref_is_del_is_snp(self):
         reader=vcf.Reader(fh('issue-214.vcf'))
-        reader.next()
-        r=reader.next()
+        next(reader)
+        r=next(reader)
         self.assertTrue(r.is_snp)
 
     # Can the ref even be a spanning deletion?
     # Note, this does not trigger issue 214, but I've added it here for completeness
     def test_issue_214_ref_is_del_var_type(self):
         reader=vcf.Reader(fh('issue-214.vcf'))
-        reader.next()
-        r=reader.next()
+        next(reader)
+        r=next(reader)
         self.assertEqual(r.var_type,'snp')
 
 class Test1kg(unittest.TestCase):
@@ -562,7 +562,7 @@ class TestRecord(unittest.TestCase):
             self.assertEqual(len(var.samples), num_calls)
 
     def test_dunder_eq(self):
-        rec = vcf.Reader(fh('example-4.0.vcf')).next()
+        rec = next(vcf.Reader(fh('example-4.0.vcf')))
         self.assertFalse(rec == None)
         self.assertFalse(None == rec)
 
@@ -892,7 +892,7 @@ class TestRecord(unittest.TestCase):
 
     def test_info_multiple_values(self):
         reader = vcf.Reader(fh('example-4.1-info-multiple-values.vcf'))
-        var = reader.next()
+        var = next(reader)
         # check Float type INFO field with multiple values
         expected = [19.3, 47.4, 14.0]
         actual = var.INFO['RepeatCopies']
@@ -1149,7 +1149,7 @@ class TestCall(unittest.TestCase):
 
     def test_dunder_eq(self):
         reader = vcf.Reader(fh('example-4.0.vcf'))
-        var = reader.next()
+        var = next(reader)
         example_call = var.samples[0]
         self.assertFalse(example_call == None)
         self.assertFalse(None == example_call)
@@ -1320,7 +1320,7 @@ class TestSampleFilter(unittest.TestCase):
         #print(buf.getvalue())
         reader = vcf.Reader(buf)
         self.assertEqual(reader.samples, ['NA00001'])
-        rec = reader.next()
+        rec = next(reader)
         self.assertEqual(len(rec.samples), 1)
 
     @unittest.skipUnless(IS_NOT_PYPY, "test broken for PyPy")
@@ -1342,7 +1342,7 @@ class TestSampleFilter(unittest.TestCase):
         # read output
         reader = vcf.Reader(buf)
         self.assertEqual(reader.samples, ['NA00001'])
-        rec = reader.next()
+        rec = next(reader)
         self.assertEqual(len(rec.samples), 1)
 
 
@@ -1401,7 +1401,7 @@ class TestRegression(unittest.TestCase):
 
     def test_issue_16(self):
         reader = vcf.Reader(fh('issue-16.vcf'))
-        n = reader.next()
+        n = next(reader)
         assert n.QUAL == None
 
     def test_null_mono(self):
@@ -1416,7 +1416,7 @@ class TestRegression(unittest.TestCase):
         out.seek(0)
         print(out.getvalue())
         p2 = vcf.Reader(out)
-        rec = p2.next()
+        rec = next(p2)
         assert rec.samples
 
 
@@ -1557,7 +1557,7 @@ class TestStrelka(unittest.TestCase):
 
     def test_strelka(self):
         reader = vcf.Reader(fh('strelka.vcf'))
-        n = reader.next()
+        n = next(reader)
         assert n is not None
 
 

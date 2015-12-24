@@ -1,5 +1,4 @@
 Introduction
 ============
 
-.. automodule:: vcf
-
+.. include:: ../README.rst

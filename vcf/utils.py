@@ -28,7 +28,7 @@ def walk_together(*readers, **kwargs):
     nexts = []
     for reader in readers:
         try:
-            nexts.append(reader.next())
+            nexts.append(next(reader))
         except StopIteration:
             nexts.append(None)
 

@@ -2,7 +2,7 @@ Development
 ===========
 
 Please use the `PyVCF repository <https://github.com/jamescasbon/PyVCF/>`_.
-Pull requests gladly accepted. 
+Pull requests gladly accepted.
 Issues should be reported at the github issue tracker.
 
 Running tests
@@ -10,7 +10,7 @@ Running tests
 
 Please check the tests by running them with::
 
-    python setup.py test 
+    python setup.py test
 
 New features should have test code sent with them.
 
@@ -20,7 +20,7 @@ Changes
 0.6.7 Release
 -------------
 
-* Include missing .pyx files 
+* Include missing .pyx files
 
 0.6.6 Release
 -------------
@@ -56,17 +56,17 @@ Changes
 -------------
 
 * cython port of #79
-* correct writing of meta lines #84 
+* correct writing of meta lines #84
 
 0.6.2 Release
 -------------
 
-* issues #78, #79 (thanks Sean, Brad) 
+* issues #78, #79 (thanks Sean, Brad)
 
 0.6.1 Release
 -------------
 
-* Add strict whitespace mode for well formed VCFs with spaces 
+* Add strict whitespace mode for well formed VCFs with spaces
   in sample names (thanks Marco)
 * Ignore blank lines in files (thanks Martijn)
 * Tweaks for handling missing data (thanks Sean)
@@ -76,9 +76,9 @@ Changes
 0.6.0 Release
 -------------
 
-* Backwards incompatible change: _Call.data is now a 
+* Backwards incompatible change: _Call.data is now a
   namedtuple (previously it was a dict)
-* Optional cython version, much improved performance.  
+* Optional cython version, much improved performance.
 * Improvements to writer (thanks @cmclean)
 * Improvements to inheritance of classes (thanks @lennax)
 
@@ -86,14 +86,14 @@ Changes
 0.5.0 Release
 -------------
 
-VCF 4.1 support: 
- * support missing genotype #28 (thanks @martijnvermaat)
- * parseALT for svs #42, #48 (thanks @dzerbino)
+* VCF 4.1 support:
+  - support missing genotype #28 (thanks @martijnvermaat)
+  - parseALT for svs #42, #48 (thanks @dzerbino)
 * `trim_common_suffix` method #22 (thanks @martijnvermaat)
 * Multiple metadata with the same key is stored (#52)
-Writer improvements
- * A/G in Number INFO fields #53 (thanks @lennax) 
- * Better output #55 (thanks @cmclean)
+* Writer improvements:
+  - A/G in Number INFO fields #53 (thanks @lennax)
+  - Better output #55 (thanks @cmclean)
 * Allow malformed INFO fields #49 (thanks @ilyaminkin)
 * Added bayes factor error bias VCF filter
 * Added docs on vcf_melt
@@ -103,14 +103,14 @@ Writer improvements
 0.4.6 Release
 -------------
 
-* Performance improvements (#47) 
+* Performance improvements (#47)
 * Preserve order of INFO column (#46)
 
 0.4.5 Release
 -------------
 
-* Support exponent syntax qual values (#43, #44) (thanks @martijnvermaat) 
-* Preserve order of header lines (#45) 
+* Support exponent syntax qual values (#43, #44) (thanks @martijnvermaat)
+* Preserve order of header lines (#45)
 
 0.4.4 Release
 -------------
@@ -139,15 +139,15 @@ Writer improvements
 0.4.0 Release
 -------------
 
-* Package structure 
+* Package structure
 * add ``vcf.utils`` module with ``walk_together`` method
-* samtools tests 
+* samtools tests
 * support Freebayes' non standard '.' for no call
-* fix vcf_melt  
+* fix vcf_melt
 * support monomorphic sites, add ``is_monomorphic`` method, handle null QUALs
-* filter support for files with monomorphic calls 
+* filter support for files with monomorphic calls
 * Values declared as single are no-longer returned in lists
-* several performance improvements 
+* several performance improvements
 
 
 0.3.0 Release
@@ -170,14 +170,14 @@ Documentation release
 
 * Add shebang to vcf_filter.py
 
-0.2 Release 
+0.2 Release
 -----------
 
 * Replace genotype dictionary with a ``Call`` object
 * Methods on ``Record`` and ``Call`` (thanks @arq5x)
 * Shortcut parse_sample when genotype is None
 
-0.1 Release 
+0.1 Release
 -----------
 
 * Added test code
@@ -188,7 +188,7 @@ Documentation release
 * Allow opening by filename as well as filesocket
 * Support fetching rows for tabixed indexed files
 * Performance improvements (see ``test/prof.py``)
-* Added extensible filter script (see FILTERS.md), vcf_filter.py 
+* Added extensible filter script (see FILTERS.md), vcf_filter.py
 
 Contributions
 =============
@@ -197,4 +197,3 @@ Project started by @jdoughertyii and taken over by @jamescasbon on 12th January 
 Contributions from @arq5x, @brentp, @martijnvermaat, @ian1roberts, @marcelm.
 
 This project was supported by `Population Genetics <http://www.populationgenetics.com/>`_.
-
