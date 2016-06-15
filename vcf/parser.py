@@ -83,7 +83,7 @@ class _vcf_metadata_parser(object):
         super(_vcf_metadata_parser, self).__init__()
         self.info_pattern = re.compile(r'''\#\#INFO=<
             ID=(?P<id>[^,]+),\s*
-            Number=(?P<number>-?\d+|\.|[AGR]),\s*
+            Number=(?P<number>-?\d+|\.|[AGR])?,\s*
             Type=(?P<type>Integer|Float|Flag|Character|String),\s*
             Description="(?P<desc>[^"]*)"
             (?:,\s*Source="(?P<source>[^"]*)")?
