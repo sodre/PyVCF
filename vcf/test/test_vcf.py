@@ -1271,6 +1271,22 @@ class TestIssue201(unittest.TestCase):
             pass
 
 
+class TestIssue234(unittest.TestCase):
+    """ See https://github.com/jamescasbon/PyVCF/issues/234 """
+
+    def test_vcf_metadata_parser_doesnt_break_with_empty_number_tags(self):
+        parser = vcf.parser._vcf_metadata_parser()
+        num_str = '##INFO=<ID=CA,Number=,Type=Flag,Description="Position '
+        num_str += 'could not be annotated to a coding region of a transcript '
+        num_str += 'using the supplied bed file">'
+        try:
+            parser.read_info(num_str)
+        except SyntaxError:
+            msg = "vcf.parser._vcf_metadata_parser shouldn't raise SyntaxError"
+            msg += " if Number tag is empty."
+            self.fail(msg)
+
+
 class TestOpenMethods(unittest.TestCase):
 
     samples = 'NA00001 NA00002 NA00003'.split()
@@ -1584,6 +1600,7 @@ suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestRecord))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestCall))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestFetch))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue201))
+suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue234))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestOpenMethods))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestSampleFilter))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestFilter))
