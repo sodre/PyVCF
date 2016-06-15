@@ -1280,7 +1280,8 @@ class TestIssue234(unittest.TestCase):
         num_str += 'could not be annotated to a coding region of a transcript '
         num_str += 'using the supplied bed file">'
         try:
-            parser.read_info(num_str)
+            info = parser.read_info(num_str)[1]
+            self.assertIsNone(info.num)
         except SyntaxError:
             msg = "vcf.parser._vcf_metadata_parser shouldn't raise SyntaxError"
             msg += " if Number tag is empty."
