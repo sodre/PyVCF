@@ -151,7 +151,7 @@ class _vcf_metadata_parser(object):
         match = self.alt_pattern.match(alt_string)
         if not match:
             raise SyntaxError(
-                "One of the FILTER lines is malformed: %s" % alt_string)
+                "One of the ALT lines is malformed: %s" % alt_string)
 
         alt = _Alt(match.group('id'), match.group('desc'))
 
