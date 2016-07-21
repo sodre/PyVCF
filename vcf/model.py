@@ -23,7 +23,7 @@ class _Call(object):
         #: Namedtuple of data from the VCF file
         self.data = data
 
-        if hasattr(self.data, 'GT'):
+        if getattr(self.data, 'GT', None) is not None:
             self.gt_alleles = [(al if al != '.' else None) for al in allele_delimiter.split(self.data.GT)]
             self.ploidity = len(self.gt_alleles)
             self.called = all([al != None for al in self.gt_alleles])
@@ -279,7 +279,7 @@ class _Record(object):
     @property
     def num_called(self):
         """ The number of called samples"""
-        return sum(s.called for s in self.samples)
+        return sum(1 for s in self.samples if s.called)
 
     @property
     def call_rate(self):
