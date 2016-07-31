@@ -1288,6 +1288,37 @@ class TestIssue234(unittest.TestCase):
             self.fail(msg)
 
 
+class TestIssue246(unittest.TestCase):
+    """ See https://github.com/jamescasbon/PyVCF/issues/246 """
+
+    def test_FT_pass_two(self):
+        reader=vcf.Reader(fh('FT.vcf'))
+        next(reader)
+        r=next(reader)
+        target=[
+            [],
+            ['DP125','DP130'],
+            ['DP125','DP130'],
+            ['DP125','DP130'],
+            ['DP125','DP130']
+        ]
+        result=[call.data.FT for call in r.samples]
+        self.assertEqual(target,result)
+
+    def test_FT_one_two(self):
+        reader=list(vcf.Reader(fh('FT.vcf')))
+        r=reader[6]
+        target=[
+            ['DP125','DP130'],
+            ['DP125','DP130'],
+            ['DP125','DP130'],
+            ['DP130'],
+            ['DP125','DP130']
+        ]
+        result=[call.data.FT for call in r.samples]
+        self.assertEqual(target,result)
+            
+
 class TestOpenMethods(unittest.TestCase):
 
     samples = 'NA00001 NA00002 NA00003'.split()
@@ -1602,6 +1633,7 @@ suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestCall))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestFetch))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue201))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue234))
+suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue246))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestOpenMethods))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestSampleFilter))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestFilter))
