@@ -360,7 +360,11 @@ class Reader(object):
                 for x in iterable]
 
     def _parse_filter(self, filt_str):
-        '''Parse the FILTER field of a VCF entry into a Python list'''
+        '''Parse the FILTER field of a VCF entry into a Python list
+
+        NOTE: this method has a cython equivalent and care must be taken
+        to keep the two methods equivalent
+        '''
         if filt_str == '.':
             return None
         elif filt_str == 'PASS':
@@ -474,6 +478,10 @@ class Reader(object):
                 # short circuit the most common
                 if samp_fmt._fields[i] == 'GT':
                     sampdat[i] = vals
+                    continue
+                # genotype filters are a special case
+                elif samp_fmt._fields[i] == 'FT':
+                    sampdat[i] = self._parse_filter(vals)
                     continue
                 elif not vals or vals == ".":
                     sampdat[i] = None
