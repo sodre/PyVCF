@@ -359,6 +359,15 @@ class Reader(object):
         return [func(x) if x != bad else None
                 for x in iterable]
 
+    def _parse_filter(self, filt_str):
+        '''Parse the FILTER field of a VCF entry into a Python list'''
+        if filt_str == '.':
+            return None
+        elif filt_str == 'PASS':
+            return []
+        else:
+            return filt_str.split(';')
+
     def _parse_info(self, info_str):
         '''Parse the INFO field of a VCF entry into a dictionary of Python
         types.
@@ -562,13 +571,7 @@ class Reader(object):
             except ValueError:
                 qual = None
 
-        filt = row[6]
-        if filt == '.':
-            filt = None
-        elif filt == 'PASS':
-            filt = []
-        else:
-            filt = filt.split(';')
+        filt = self._parse_filter(row[6])
         info = self._parse_info(row[7])
 
         try:
