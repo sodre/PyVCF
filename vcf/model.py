@@ -117,6 +117,22 @@ class _Call(object):
             return None
         return self.gt_type == 1
 
+    @property
+    def is_filt(self):
+        """ Return True for filtered calls """
+        try: # no FT annotation present for this variant
+            FT=self.data.FT
+        except AttributeError:
+            return False
+        if FT == None or FT == []: # FT is not set or set to PASS
+            return False
+        elif len(FT) > 0: # FT contains one or more filters
+            return True
+        else: # This should not happen
+            raise RuntimeError(
+                "Parsing error for FT annotation in {}, "\
+                "please file a bug".format(self))
+
 
 class _Record(object):
     """ A set of calls at a site.  Equivalent to a row in a VCF file.
@@ -535,6 +551,19 @@ class _Record(object):
     def is_monomorphic(self):
         """ Return True for reference calls """
         return len(self.ALT) == 1 and self.ALT[0] is None
+
+    @property
+    def is_filt(self,call=None):
+        """ Return True if a variant has been filtered """
+        FT=self.FILTER
+        if FT == None or FT == []: # FT is not set or set to PASS
+            return False
+        elif len(FT) > 0: # FT contains one or more filters
+            return True
+        else: # This should not happen
+            raise RuntimeError(
+                "Parsing error for FILTER annotation in {}, "\
+                "please file a bug".format(self))
 
 
 class _AltRecord(object):
