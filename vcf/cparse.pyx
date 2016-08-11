@@ -9,6 +9,19 @@ INTEGER = 'Integer'
 FLOAT = 'Float'
 NUMERIC = 'Numeric'
 
+def _parse_filter(filt_str):
+    '''Parse the FILTER field of a VCF entry into a Python list
+
+    NOTE: this method has a python equivalent and care must be taken
+    to keep the two methods equivalent
+    '''
+    if filt_str == '.':
+        return None
+    elif filt_str == 'PASS':
+        return []
+    else:
+        return filt_str.split(';')
+
 def parse_samples(
         list names, list samples, samp_fmt,
         list samp_fmt_types, list samp_fmt_nums, site):
@@ -38,6 +51,10 @@ def parse_samples(
             # short circuit the most common
             if samp_fmt._fields[j] == 'GT':
                 sampdat[j] = vals
+                continue
+            # genotype filters are a special case
+            elif samp_fmt._fields[j] == 'FT':
+                sampdat[j] = _parse_filter(vals)
                 continue
             elif not vals or vals == '.':
                 sampdat[j] = None

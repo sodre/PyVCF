@@ -359,6 +359,19 @@ class Reader(object):
         return [func(x) if x != bad else None
                 for x in iterable]
 
+    def _parse_filter(self, filt_str):
+        '''Parse the FILTER field of a VCF entry into a Python list
+
+        NOTE: this method has a cython equivalent and care must be taken
+        to keep the two methods equivalent
+        '''
+        if filt_str == '.':
+            return None
+        elif filt_str == 'PASS':
+            return []
+        else:
+            return filt_str.split(';')
+
     def _parse_info(self, info_str):
         '''Parse the INFO field of a VCF entry into a dictionary of Python
         types.
@@ -466,6 +479,10 @@ class Reader(object):
                 if samp_fmt._fields[i] == 'GT':
                     sampdat[i] = vals
                     continue
+                # genotype filters are a special case
+                elif samp_fmt._fields[i] == 'FT':
+                    sampdat[i] = self._parse_filter(vals)
+                    continue
                 elif not vals or vals == ".":
                     sampdat[i] = None
                     continue
@@ -562,13 +579,7 @@ class Reader(object):
             except ValueError:
                 qual = None
 
-        filt = row[6]
-        if filt == '.':
-            filt = None
-        elif filt == 'PASS':
-            filt = []
-        else:
-            filt = filt.split(';')
+        filt = self._parse_filter(row[6])
         info = self._parse_info(row[7])
 
         try:
