@@ -1319,8 +1319,8 @@ class TestIssue246(unittest.TestCase):
         self.assertEqual(target,result)
             
 
-class TestIsFilt(unittest.TestCase):
-    """ Test is_filt property for _Call and _Record """
+class TestIsFiltered(unittest.TestCase):
+    """ Test is_filtered property for _Call and _Record """
 
     def test_is_filt_record(self):
         reader = vcf.Reader(fh('FT.vcf'))
@@ -1328,14 +1328,14 @@ class TestIsFilt(unittest.TestCase):
             False, False, True, False, False,
             False, True, False, False, False
         ]
-        result = [record.is_filt for record in reader]
+        result = [record.is_filtered for record in reader]
         self.assertEqual(target,result)
 
     def test_is_filt_call_unset(self):
         reader = vcf.Reader(fh('FT.vcf'))
         record = next(reader)
         target = [False]*5
-        result = [call.is_filt for call in record]
+        result = [call.is_filtered for call in record]
         self.assertEqual(target,result)
 
     def test_is_filt_call_pass_two(self):
@@ -1343,14 +1343,14 @@ class TestIsFilt(unittest.TestCase):
         next(reader)
         record = next(reader)
         target = [False, True, True, True, True]
-        result = [call.is_filt for call in record]
+        result = [call.is_filtered for call in record]
         self.assertEqual(target,result)
 
     def test_is_filt_call_one(self):
         reader = list(vcf.Reader(fh('FT.vcf')))
         record = reader[6]
         target = [True]*5
-        result = [call.is_filt for call in record]
+        result = [call.is_filtered for call in record]
         self.assertEqual(target,result)
 
 
@@ -1669,7 +1669,7 @@ suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestFetch))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue201))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue234))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue246))
-suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIsFilt))
+suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIsFiltered))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestOpenMethods))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestSampleFilter))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestFilter))

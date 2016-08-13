@@ -118,20 +118,16 @@ class _Call(object):
         return self.gt_type == 1
 
     @property
-    def is_filt(self):
+    def is_filtered(self):
         """ Return True for filtered calls """
         try: # no FT annotation present for this variant
-            FT=self.data.FT
+            filt = self.data.FT
         except AttributeError:
             return False
-        if FT == None or FT == []: # FT is not set or set to PASS
+        if filt is None or len(filt) == 0: # FT is not set or set to PASS
             return False
-        elif len(FT) > 0: # FT contains one or more filters
+        else:
             return True
-        else: # This should not happen
-            raise RuntimeError(
-                "Parsing error for FT annotation in {}, "\
-                "please file a bug".format(self))
 
 
 class _Record(object):
@@ -553,17 +549,13 @@ class _Record(object):
         return len(self.ALT) == 1 and self.ALT[0] is None
 
     @property
-    def is_filt(self,call=None):
+    def is_filtered(self):
         """ Return True if a variant has been filtered """
-        FT=self.FILTER
-        if FT == None or FT == []: # FT is not set or set to PASS
+        filt = self.FILTER
+        if filt is None or len(filt) == 0: # FILTER is not set or set to PASS
             return False
-        elif len(FT) > 0: # FT contains one or more filters
+        else:
             return True
-        else: # This should not happen
-            raise RuntimeError(
-                "Parsing error for FILTER annotation in {}, "\
-                "please file a bug".format(self))
 
 
 class _AltRecord(object):
