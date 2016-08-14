@@ -117,6 +117,18 @@ class _Call(object):
             return None
         return self.gt_type == 1
 
+    @property
+    def is_filtered(self):
+        """ Return True for filtered calls """
+        try: # no FT annotation present for this variant
+            filt = self.data.FT
+        except AttributeError:
+            return False
+        if filt is None or len(filt) == 0: # FT is not set or set to PASS
+            return False
+        else:
+            return True
+
 
 class _Record(object):
     """ A set of calls at a site.  Equivalent to a row in a VCF file.
@@ -535,6 +547,15 @@ class _Record(object):
     def is_monomorphic(self):
         """ Return True for reference calls """
         return len(self.ALT) == 1 and self.ALT[0] is None
+
+    @property
+    def is_filtered(self):
+        """ Return True if a variant has been filtered """
+        filt = self.FILTER
+        if filt is None or len(filt) == 0: # FILTER is not set or set to PASS
+            return False
+        else:
+            return True
 
 
 class _AltRecord(object):

@@ -1319,6 +1319,41 @@ class TestIssue246(unittest.TestCase):
         self.assertEqual(target,result)
             
 
+class TestIsFiltered(unittest.TestCase):
+    """ Test is_filtered property for _Call and _Record """
+
+    def test_is_filt_record(self):
+        reader = vcf.Reader(fh('FT.vcf'))
+        target = [
+            False, False, True, False, False,
+            False, True, False, False, False
+        ]
+        result = [record.is_filtered for record in reader]
+        self.assertEqual(target,result)
+
+    def test_is_filt_call_unset(self):
+        reader = vcf.Reader(fh('FT.vcf'))
+        record = next(reader)
+        target = [False]*5
+        result = [call.is_filtered for call in record]
+        self.assertEqual(target,result)
+
+    def test_is_filt_call_pass_two(self):
+        reader = vcf.Reader(fh('FT.vcf'))
+        next(reader)
+        record = next(reader)
+        target = [False, True, True, True, True]
+        result = [call.is_filtered for call in record]
+        self.assertEqual(target,result)
+
+    def test_is_filt_call_one(self):
+        reader = list(vcf.Reader(fh('FT.vcf')))
+        record = reader[6]
+        target = [True]*5
+        result = [call.is_filtered for call in record]
+        self.assertEqual(target,result)
+
+
 class TestOpenMethods(unittest.TestCase):
 
     samples = 'NA00001 NA00002 NA00003'.split()
@@ -1634,6 +1669,7 @@ suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestFetch))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue201))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue234))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue246))
+suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIsFiltered))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestOpenMethods))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestSampleFilter))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestFilter))
