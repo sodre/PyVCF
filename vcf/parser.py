@@ -753,10 +753,26 @@ class Writer(object):
             gt = './.' if 'GT' in fmt else ''
 
         if not gt:
-            return ':'.join([self._stringify(x) for x in sample.data])
+            result = []
+            for field in sample.data._fields:
+                value = getattr(sample.data,field)
+                if field == 'FT':
+                    result.append(self._format_filter(value))
+                else:
+                    result.append(self._stringify(value))
+            return ':'.join(result)
         # Following the VCF spec, GT is always the first item whenever it is present.
         else:
-            return ':'.join([gt] + [self._stringify(x) for x in sample.data[1:]])
+            result = []
+            for field in sample.data._fields:
+                value = getattr(sample.data,field)
+                if field == 'GT':
+                    continue
+                if field == 'FT':
+                    result.append(self._format_filter(value))
+                else:
+                    result.append(self._stringify(value))
+            return ':'.join([gt] + result)
 
     def _stringify(self, x, none='.', delim=','):
         if type(x) == type([]):
