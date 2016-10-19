@@ -78,7 +78,7 @@ _Contig = collections.namedtuple('Contig', ['id', 'length'])
 
 
 class _vcf_metadata_parser(object):
-    '''Parse the metadat in the header of a VCF file.'''
+    '''Parse the metadata in the header of a VCF file.'''
     def __init__(self):
         super(_vcf_metadata_parser, self).__init__()
         self.info_pattern = re.compile(r'''\#\#INFO=<
