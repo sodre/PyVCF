@@ -497,7 +497,7 @@ class Reader(object):
                             sampdat[i] = int(vals)
                         except ValueError:
                             sampdat[i] = float(vals)
-                    elif entry_type == 'Float':
+                    elif entry_type == 'Float' or entry_type == 'Numeric':
                         sampdat[i] = float(vals)
                     else:
                         sampdat[i] = vals
