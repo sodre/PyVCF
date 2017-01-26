@@ -491,8 +491,7 @@ class Reader(object):
                 entry_type = samp_fmt._types[i]
 
                 # we don't need to split single entries
-                if entry_num == 1 or ',' not in vals:
-
+                if entry_num == 1:
                     if entry_type == 'Integer':
                         try:
                             sampdat[i] = int(vals)
@@ -502,14 +501,9 @@ class Reader(object):
                         sampdat[i] = float(vals)
                     else:
                         sampdat[i] = vals
-
-                    if entry_num != 1:
-                        sampdat[i] = (sampdat[i])
-
                     continue
 
                 vals = vals.split(',')
-
                 if entry_type == 'Integer':
                     try:
                         sampdat[i] = _map(int, vals)
