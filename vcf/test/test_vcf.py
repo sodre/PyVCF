@@ -1269,20 +1269,20 @@ class TestFetch(unittest.TestCase):
 
         fetched_variants = self.reader.fetch('20', 1110695, 1234567)
         self.assertFetchedExpectedPositions(
-                fetched_variants, [1110696, 1230237, 1231234, 1234567])
+                fetched_variants, [1110696, 1230237, 1234567])
 
 
     def testFetchesFromStartIfStartOnlySpecified(self):
         fetched_variants = self.reader.fetch('20', 1110695)
         self.assertFetchedExpectedPositions(
-                fetched_variants, [1110696, 1230237, 1231234, 1234567])
+                fetched_variants, [1110696, 1230237, 1234567])
 
 
     def testFetchesAllFromChromIfOnlyChromSpecified(self):
         fetched_variants = self.reader.fetch('20')
         self.assertFetchedExpectedPositions(
                 fetched_variants,
-                [14370, 17330, 1110696, 1230237, 1231234, 1234567]
+                [14370, 17330, 1110696, 1230237, 1234567]
         )
 
 
@@ -1351,7 +1351,7 @@ class TestIssue246(unittest.TestCase):
         ]
         result=[call.data.FT for call in r.samples]
         self.assertEqual(target,result)
-            
+
 
 class TestIsFiltered(unittest.TestCase):
     """ Test is_filtered property for _Call and _Record """
