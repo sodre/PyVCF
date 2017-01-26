@@ -65,8 +65,7 @@ def parse_samples(
             entry_num = samp_fmt_nums[j]
 
             # we don't need to split single entries
-            if entry_num == 1 or ',' not in vals:
-
+            if entry_num == 1:
                 if entry_type == INTEGER:
                     try:
                         sampdat[j] = int(vals)
@@ -76,14 +75,9 @@ def parse_samples(
                     sampdat[j] = float(vals)
                 else:
                     sampdat[j] = vals
-
-                if entry_num != 1:
-                    sampdat[j] = (sampdat[j])
-
                 continue
 
             vals = vals.split(',')
-
             if entry_type == INTEGER:
                 try:
                     sampdat[j] = _map(int, vals)

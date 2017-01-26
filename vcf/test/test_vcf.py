@@ -1353,6 +1353,17 @@ class TestIssue246(unittest.TestCase):
         self.assertEqual(target,result)
 
 
+class TestIssue254(unittest.TestCase):
+    """ See https://github.com/jamescasbon/PyVCF/issues/254 """
+
+    def test_remains_singleton_list(self):
+        reader = vcf.Reader(fh('issue-254.vcf'))
+        record = next(reader)
+        expected = [[0.1], [0.2], [0.3]]
+        actual = [call.data.AO for call in record.samples]
+        self.assertEqual(expected, actual)
+
+
 class TestIsFiltered(unittest.TestCase):
     """ Test is_filtered property for _Call and _Record """
 
@@ -1703,6 +1714,7 @@ suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestFetch))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue201))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue234))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue246))
+suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue254))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIsFiltered))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestOpenMethods))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestSampleFilter))
