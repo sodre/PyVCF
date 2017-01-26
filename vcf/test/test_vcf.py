@@ -578,6 +578,8 @@ class TestRecord(unittest.TestCase):
                 self.assertEqual(3.0/3.0, call_rate)
             if var.POS == 1230237:
                 self.assertEqual(3.0/3.0, call_rate)
+            if var.POS == 1231234:
+                self.assertEqual(3.0/3.0, call_rate)
             elif var.POS == 1234567:
                 self.assertEqual(2.0/3.0, call_rate)
 
@@ -593,6 +595,8 @@ class TestRecord(unittest.TestCase):
                 self.assertEqual([2.0/6.0, 4.0/6.0], aaf)
             if var.POS == 1230237:
                 self.assertEqual([0.0/6.0], aaf)
+            if var.POS == 1231234:
+                self.assertEqual([2.0/6.0], aaf)
             elif var.POS == 1234567:
                 self.assertEqual([2.0/4.0, 1.0/4.0], aaf)
         reader = vcf.Reader(fh('example-4.1-ploidy.vcf'))
@@ -615,6 +619,8 @@ class TestRecord(unittest.TestCase):
                 self.assertEqual(None, pi)
             if var.POS == 1230237:
                 self.assertEqual(0.0/6.0, pi)
+            if var.POS == 1231234:
+                self.assertEqual((6.0/(6.0-1))*(2.0*(1.0/3.0)*(2.0/3.0)) , pi)
             elif var.POS == 1234567:
                 self.assertEqual(None, pi)
 
@@ -630,6 +636,8 @@ class TestRecord(unittest.TestCase):
                 self.assertEqual(4.0/9.0, het)
             if var.POS == 1230237:
                 self.assertEqual(0.0, het)
+            if var.POS == 1231234:
+                self.assertEqual(4.0/9.0, het)
             elif var.POS == 1234567:
                 self.assertEqual(5.0/8.0, het)
 
@@ -649,6 +657,8 @@ class TestRecord(unittest.TestCase):
             if var.POS == 1110696:
                 self.assertEqual(True, is_snp)
             if var.POS == 1230237:
+                self.assertEqual(False, is_snp)
+            if var.POS == 1231234:
                 self.assertEqual(False, is_snp)
             elif var.POS == 1234567:
                 self.assertEqual(False, is_snp)
@@ -682,6 +692,8 @@ class TestRecord(unittest.TestCase):
             if var.POS == 1110696:
                 self.assertEqual(False, is_indel)
             if var.POS == 1230237:
+                self.assertEqual(False, is_indel)
+            if var.POS == 1231234:
                 self.assertEqual(True, is_indel)
             elif var.POS == 1234567:
                 self.assertEqual(True, is_indel)
@@ -698,6 +710,8 @@ class TestRecord(unittest.TestCase):
                 self.assertEqual(False, is_trans)
             if var.POS == 1230237:
                 self.assertEqual(False, is_trans)
+            if var.POS == 1231234:
+                self.assertEqual(False, is_trans)
             elif var.POS == 1234567:
                 self.assertEqual(False, is_trans)
 
@@ -712,6 +726,8 @@ class TestRecord(unittest.TestCase):
             if var.POS == 1110696:
                 self.assertEqual(False, is_del)
             if var.POS == 1230237:
+                self.assertEqual(False, is_del)
+            if var.POS == 1231234:
                 self.assertEqual(True, is_del)
             elif var.POS == 1234567:
                 self.assertEqual(False, is_del)
@@ -727,6 +743,8 @@ class TestRecord(unittest.TestCase):
             if var.POS == 1110696:
                 self.assertEqual("snp", type)
             if var.POS == 1230237:
+                self.assertEqual("unknown", type)
+            if var.POS == 1231234:
                 self.assertEqual("indel", type)
             elif var.POS == 1234567:
                 self.assertEqual("indel", type)
@@ -759,6 +777,8 @@ class TestRecord(unittest.TestCase):
             if var.POS == 1110696:
                 self.assertEqual("unknown", subtype)
             if var.POS == 1230237:
+                self.assertEqual("unknown", subtype)
+            if var.POS == 1231234:
                 self.assertEqual("del", subtype)
             elif var.POS == 1234567:
                 self.assertEqual("unknown", subtype)
@@ -807,6 +827,8 @@ class TestRecord(unittest.TestCase):
                 self.assertEqual(False, is_sv)
             if var.POS == 1230237:
                 self.assertEqual(False, is_sv)
+            if var.POS == 1231234:
+                self.assertEqual(False, is_sv)
             elif var.POS == 1234567:
                 self.assertEqual(False, is_sv)
 
@@ -837,6 +859,8 @@ class TestRecord(unittest.TestCase):
             if var.POS == 1110696:
                 self.assertEqual(False, is_precise)
             if var.POS == 1230237:
+                self.assertEqual(False, is_precise)
+            if var.POS == 1231234:
                 self.assertEqual(False, is_precise)
             elif var.POS == 1234567:
                 self.assertEqual(False, is_precise)
@@ -869,6 +893,8 @@ class TestRecord(unittest.TestCase):
                 self.assertEqual(None, sv_end)
             if var.POS == 1230237:
                 self.assertEqual(None, sv_end)
+            if var.POS == 1231234:
+                self.assertEqual(None, sv_end)
             elif var.POS == 1234567:
                 self.assertEqual(None, sv_end)
 
@@ -885,6 +911,8 @@ class TestRecord(unittest.TestCase):
                 expected = 1e+03
             if var.POS == 1230237:
                 expected = 47
+            if var.POS == 1231234:
+                expected = 46
             elif var.POS == 1234567:
                 expected = None
             self.assertEqual(expected, qual)
@@ -1166,6 +1194,8 @@ class TestCall(unittest.TestCase):
                 self.assertEqual([True, True, False], phases)
             if var.POS == 1230237:
                 self.assertEqual([True, True, False], phases)
+            if var.POS == 1231234:
+                self.assertEqual([True, True, True], phases)
             elif var.POS == 1234567:
                 self.assertEqual([False, False, False], phases)
 
@@ -1181,6 +1211,8 @@ class TestCall(unittest.TestCase):
                 self.assertEqual(['G|T', 'T|G', 'T/T'], gt_bases)
             elif var.POS == 1230237:
                 self.assertEqual(['T|T', 'T|T', 'T/T'], gt_bases)
+            elif var.POS == 1231234:
+                self.assertEqual(['A|A', 'AT|AT', 'AT|AT'], gt_bases)
             elif var.POS == 1234567:
                 self.assertEqual([None, 'GTCT/GTACT', 'G/G'], gt_bases)
 
@@ -1198,6 +1230,8 @@ class TestCall(unittest.TestCase):
                 self.assertEqual([1,1,2], gt_types)
             elif var.POS == 1230237:
                 self.assertEqual([0,0,0], gt_types)
+            elif var.POS == 1231234:
+                self.assertEqual([2,0,0], gt_types)
             elif var.POS == 1234567:
                 self.assertEqual([None,1,2], gt_types)
 
@@ -1317,7 +1351,7 @@ class TestIssue246(unittest.TestCase):
         ]
         result=[call.data.FT for call in r.samples]
         self.assertEqual(target,result)
-            
+
 
 class TestIsFiltered(unittest.TestCase):
     """ Test is_filtered property for _Call and _Record """
@@ -1517,10 +1551,10 @@ class TestUtils(unittest.TestCase):
             self.assertEqual(x[0], x[1])
             self.assertEqual(x[1], x[2])
             n+= 1
-        self.assertEqual(n, 5)
+        self.assertEqual(n, 6)
 
-        # artificial case 2 from the left, 2 from the right, 2 together, 1 from the right, 1 from the left
-        expected = 'llrrttrl'
+        # artificial case 2 from the left, 2 from the right, 3 together, 1 from the right, 1 from the left
+        expected = 'llrrtttrl'
         reader1 = vcf.Reader(fh('walk_left.vcf'))
         reader2 = vcf.Reader(fh('example-4.0.vcf'))
 

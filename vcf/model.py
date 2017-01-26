@@ -401,7 +401,7 @@ class _Record(object):
             return True
         for alt in self.ALT:
             if alt is None:
-                return True
+                return False
             if alt.type != "SNV" and alt.type != "MNV":
                 return False
             elif len(alt) != len(self.REF):
@@ -452,7 +452,7 @@ class _Record(object):
             # just one alt allele
             alt_allele = self.ALT[0]
             if alt_allele is None:
-                return True
+                return False
             if len(self.REF) > len(alt_allele):
                 return True
             else:
