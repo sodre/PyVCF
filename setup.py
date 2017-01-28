@@ -8,14 +8,7 @@ try:
 except:
     CYTHON = False
 
-IS_PYTHON26 = sys.version_info[:2] == (2, 6)
-
 DEPENDENCIES = ['setuptools']
-
-if IS_PYTHON26:
-    DEPENDENCIES.extend(['argparse', 'counter', 'ordereddict',
-                         'unittest2'])
-
 
 # get the version without an import
 VERSION = "Undefined"
@@ -68,7 +61,6 @@ setup(
         'Programming Language :: Cython',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.2',
