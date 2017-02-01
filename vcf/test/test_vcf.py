@@ -393,6 +393,16 @@ class TestInfoTypeCharacter(unittest.TestCase):
             self.assertEquals(l.INFO, r.INFO)
 
 
+class TestInfoBadInfoFields(unittest.TestCase):
+    def test_parse(self):
+        reader = vcf.Reader(fh('bad-info-character.vcf'))
+        record = next(reader)
+        self.assertEquals(record.INFO['DOT'], [None])
+        self.assertEquals(record.INFO['EMPTY'], [None])
+        self.assertEquals(record.INFO['NOTEMPTY'], ['6'])
+        pass
+
+
 class TestParseMetaLine(unittest.TestCase):
     def test_parse(self):
         reader = vcf.Reader(fh('parse-meta-line.vcf'))
