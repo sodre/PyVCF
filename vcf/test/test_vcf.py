@@ -393,13 +393,17 @@ class TestInfoTypeCharacter(unittest.TestCase):
             self.assertEquals(l.INFO, r.INFO)
 
 
-class TestInfoBadInfoFields(unittest.TestCase):
+class TestBadInfoFields(unittest.TestCase):
     def test_parse(self):
         reader = vcf.Reader(fh('bad-info-character.vcf'))
         record = next(reader)
-        self.assertEquals(record.INFO['DOT'], [None])
-        self.assertEquals(record.INFO['EMPTY'], [None])
-        self.assertEquals(record.INFO['NOTEMPTY'], ['6'])
+        self.assertEquals(record.INFO['DOT'], None)
+        self.assertEquals(record.INFO['DOT_6'], None)
+        self.assertEquals(record.INFO['DOT_N'], None)
+        self.assertEquals(record.INFO['EMPTY'], None)
+        self.assertEquals(record.INFO['EMPTY_6'], None)
+        self.assertEquals(record.INFO['EMPTY_N'], None)
+        self.assertEquals(record.INFO['NOTEMPTY'], [6])
         pass
 
 
@@ -1734,3 +1738,4 @@ suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestUtils))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestGATKMeta))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestUncalledGenotypes))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestStrelka))
+suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestBadInfoFields))
