@@ -1,8 +1,8 @@
 from model import _Call
 
-cdef _map(func, iterable, bad='.'):
+cdef _map(func, iterable, bad=['.', '']):
     '''``map``, but make bad values None.'''
-    return [func(x) if x != bad else None
+    return [func(x) if x not in bad else None
             for x in iterable]
 
 INTEGER = 'Integer'

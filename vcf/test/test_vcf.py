@@ -393,6 +393,24 @@ class TestInfoTypeCharacter(unittest.TestCase):
             self.assertEquals(l.INFO, r.INFO)
 
 
+class TestBadInfoFields(unittest.TestCase):
+    def test_parse(self):
+        reader = vcf.Reader(fh('bad-info-character.vcf'))
+        record = next(reader)
+        self.assertEquals(record.INFO['DOT_1'], None)
+        self.assertEquals(record.INFO['DOT_3'], [None, None, None])
+        self.assertEquals(record.INFO['DOT_N'], [None])
+        self.assertEquals(record.INFO['EMPTY_1'], None)
+        # Perhaps EMPTY_3 should yield [None, None, None] but this is really a
+        # cornercase of unspecified behaviour.
+        self.assertEquals(record.INFO['EMPTY_3'], [None])
+        self.assertEquals(record.INFO['EMPTY_N'], [None])
+        self.assertEquals(record.INFO['NOTEMPTY_1'], 1)
+        self.assertEquals(record.INFO['NOTEMPTY_3'], [1, 2, 3])
+        self.assertEquals(record.INFO['NOTEMPTY_N'], [1])
+        pass
+
+
 class TestParseMetaLine(unittest.TestCase):
     def test_parse(self):
         reader = vcf.Reader(fh('parse-meta-line.vcf'))
@@ -1724,3 +1742,4 @@ suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestUtils))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestGATKMeta))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestUncalledGenotypes))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestStrelka))
+suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestBadInfoFields))
