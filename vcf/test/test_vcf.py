@@ -1657,22 +1657,32 @@ class TestUncalledGenotypes(unittest.TestCase):
             gt_nums = [s.gt_nums for s in var.samples]
             ploidity = [s.ploidity for s in var.samples]
             gt_alleles = [s.gt_alleles for s in var.samples]
+            gt_type = [s.gt_type for s in var.samples]
 
             if var.POS == 14370:
                 self.assertEqual(['0|0', None, '1/1'], gt_nums)
                 self.assertEqual(['G|G', None, 'A/A'], gt_bases)
                 self.assertEqual([2,2,2], ploidity)
                 self.assertEqual([['0','0'], [None,None], ['1','1']], gt_alleles)
+                self.assertEqual([0, None, 2], gt_type)
             elif var.POS == 17330:
                 self.assertEqual([None, '0|1', '0/0'], gt_nums)
                 self.assertEqual([None, 'T|A', 'T/T'], gt_bases)
                 self.assertEqual([3,2,2], ploidity)
                 self.assertEqual([[None,None,None], ['0','1'], ['0','0']], gt_alleles)
+                self.assertEqual([None, 1, 0], gt_type)
             elif var.POS == 1234567:
                 self.assertEqual(['0/1', '0/2', None], gt_nums)
                 self.assertEqual(['GTC/G', 'GTC/GTCT', None], gt_bases)
                 self.assertEqual([2,2,1], ploidity)
                 self.assertEqual([['0','1'], ['0','2'], [None]], gt_alleles)
+                self.assertEqual([1, 1, None], gt_type)
+            elif var.POS == 1234568:
+                self.assertEqual(['./1', '0/.', None], gt_nums)
+                self.assertEqual(['./G', 'GTC/.', None], gt_bases)
+                self.assertEqual([2,2,1], ploidity)
+                self.assertEqual([[None,'1'], ['0',None], [None]], gt_alleles)
+                self.assertEqual([1, 1, None], gt_type)
         reader._reader.close()
 
 
